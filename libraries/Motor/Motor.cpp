@@ -7,16 +7,6 @@
 //     0b1001
 // };
 
-// int steps[8] = {
-//     0b1100,
-//     0b0100,
-//     0b0110,
-//     0b0010,
-//     0b0011,
-//     0b0001,
-//     0b1001,
-//     0b1000
-// };
 
 int steps[8] = {
     0b1000,
@@ -78,11 +68,11 @@ int Motor::getStepMask(){
        // Serial.println(current_position);
     }
 
-    //step_delay=3000;
+    //step_delay=2000;
 
     int distance_from_edge = sqrt(min(steps_since_start,  steps_left));
 
-    step_delay = max(1750, 4000 - distance_from_edge * 170) * speed_mod;
+    step_delay = max(1750, 2000 - distance_from_edge * 170) * speed_mod;
 
     last_step_time = time;
 

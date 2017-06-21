@@ -7,19 +7,27 @@ int clockPin = 12;
 ////Pin connected to DS of 74HC595
 int dataPin = 11;
 
-int motor_count = 2;
+// int motor_count = 2;
 
-int bit_0 = 1 * 0;
-int bit_1 = pow(1, 2) * 1;
-int bit_2 = pow(2, 2) * 1;
-int bit_3 = pow(3, 2) * 1;
-int bit_4 = pow(4, 2) * 1;
+// int bit_0 = 1 * 0;
+// int bit_1 = pow(1, 2) * 1;
+// int bit_2 = pow(2, 2) * 1;
+// int bit_3 = pow(3, 2) * 1;
+// int bit_4 = pow(4, 2) * 1;
 
-int top = 720;
-int right = 1080;
+int rotation_steps = 1440;
+
 int bottom = 0;
-int left = 360;
-int out = 180;
+int left =  (rotation_steps / 4) + 15;
+int top = (rotation_steps  / 2) + 0;
+int right =  (rotation_steps * 3 / 4) - 6;
+
+int out = rotation_steps / 8;
+
+int auto_mode = 0;
+unsigned long refresh_interval = 10000;
+unsigned long last_refresh_time = 0;
+int current_digit = 0;
 
 Clock clock_1;
 Clock clock_2;
@@ -37,10 +45,18 @@ void setup() {
 
     // analogWrite(5, 255);
 
+    Serial.println(8888888);
+    Serial.println(bottom);
+    Serial.println(left);
+    Serial.println(top);
+    Serial.println(right);
+
+
+
 }
 
 void loop() {
-    // Serial.println(99999);
+    
     // int clock1_mask = clock_1.doStep();
     digitalWrite(latchPin, LOW);
 
@@ -53,59 +69,93 @@ void loop() {
 
     digitalWrite(latchPin, HIGH);
 
-    while (Serial.available() > 0) {
-        // look for the next valid integer in the incoming serial stream:
-        //int move = Serial.parseInt();
 
-        //clock_1.setHands(move, move );
-        // clock_2.setHands(move, move );
-        // clock_3.setHands(move, move );
-        // clock_4.setHands(move, move );
-        // clock_5.setHands(move, move );
-        // clock_6.setHands(move, move );
+    if(auto_mode){
+        if(millis() - last_refresh_time >= refresh_interval)
+        {
+            Serial.println(last_refresh_time);
+
+            last_refresh_time += refresh_interval;
+            showDigit(current_digit);
+            current_digit++;
+
+            if(current_digit > 9){
+                current_digit = -1;
+            }
+        }
+    }
+
+   
+
+    while (Serial.available() > 0) {
 
         int digit = Serial.parseInt();
-        // Serial.println(digit);
-
-        if(digit == 0){
-            showZero();
+        
+        if(digit == -2){
+            auto_mode = 1;
         }
-        if(digit == 1){
-            showOne();
-        }
-        if(digit == 2){
-            showTwo();
-        }
-        if(digit == 3){
-            showThree();
-        }
-        if(digit == 4){
-            showFour();
-        }
-        if(digit == -1){
-            Serial.println(999999999);
-            showNull();
+        else {
+            showDigit(digit);
+            auto_mode = 0;
         }
 
     }
 }
 
+void showDigit(int digit){
+    Serial.println(digit);
+    if(digit == 0){
+        showZero();
+    }
+    if(digit == 1){
+        showOne();
+    }
+    if(digit == 2){
+        showTwo();
+    }
+    if(digit == 3){
+        showThree();
+    }
+    if(digit == 4){
+        showFour();
+    }
+    if(digit == 5){
+        showFive();
+    }
+    if(digit == 6){
+        showSix();
+    }
+    if(digit == 7){
+        showSeven();
+    }
+    if(digit == 8){
+        showEight();
+    }
+    if(digit == 9){
+        showNine();
+    }
+    if(digit == -1){
+        Serial.println(999999999);
+        showNull();
+    }
+}
+
 void showZero(){
-    clock_1.setHands(bottom, right );
-    clock_2.setHands(bottom, left );
-    clock_3.setHands(top, bottom );
-    clock_4.setHands(top, bottom );
-    clock_5.setHands(top, right );
-    clock_6.setHands(top, left );
+    //clock_1.setHands(bottom, right );
+    // clock_2.setHands(bottom, left );
+    // clock_3.setHands(top, bottom );
+    // clock_4.setHands(top, bottom );
+     clock_5.setHands(top, right );
+    // clock_6.setHands(top, left );
 }
 
 void showOne(){
     clock_1.setHands(out, out );
-    clock_2.setHands(left, bottom );
+    clock_2.setHands(bottom, bottom );
     clock_3.setHands(out, out );
     clock_4.setHands(top, bottom );
     clock_5.setHands(out, out );
-    clock_6.setHands(top, bottom );
+    clock_6.setHands(top, top );
 }
 void showTwo(){
     clock_1.setHands(right, right );
@@ -133,6 +183,52 @@ void showFour(){
     clock_5.setHands(out, out );
     clock_6.setHands(top, top );
 }
+
+void showFive(){
+    clock_1.setHands(right, bottom );
+    clock_2.setHands(left, left );
+    clock_3.setHands(top, right );
+    clock_4.setHands(left, bottom );
+    clock_5.setHands(right, right );
+    clock_6.setHands(top, left );
+}
+
+void showSix(){
+    clock_1.setHands(right, bottom );
+    clock_2.setHands(left, left );
+    clock_3.setHands(top, bottom );
+    clock_4.setHands(bottom, left );
+    clock_5.setHands(right, top );
+    clock_6.setHands(top, left );
+}
+
+void showSeven(){
+    clock_1.setHands(right, right );
+    clock_2.setHands(left, bottom );
+    clock_3.setHands(out, out );
+    clock_4.setHands(top, bottom );
+    clock_5.setHands(out, out );
+    clock_6.setHands(top, top );
+}
+
+void showEight(){
+    clock_1.setHands(right, bottom );
+    clock_2.setHands(left, bottom );
+    clock_3.setHands(right, bottom );
+    clock_4.setHands(left, bottom );
+    clock_5.setHands(right, top );
+    clock_6.setHands(top, left );
+}
+
+void showNine(){
+    clock_1.setHands(right, bottom );
+    clock_2.setHands(left, bottom );
+    clock_3.setHands(top, right );
+    clock_4.setHands(top, bottom );
+    clock_5.setHands(right, right );
+    clock_6.setHands(top, left );
+}
+
 
 void showNull(){
     clock_1.setHands(bottom, bottom );

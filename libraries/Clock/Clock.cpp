@@ -3,6 +3,7 @@
 
 #include "Clock.h"
 
+int clock_steps = 1440;
 
 Clock::Clock( ){
 
@@ -29,7 +30,7 @@ int Clock::setHands(int hour_position, int minute_position){
 
 	if(motor_hour.current_position != hour_position || motor_minute.current_position != minute_position){
 		if(motor_hour.current_position >= hour_position){
-			motor_hour.moveBy(1440 - motor_hour.current_position);
+			motor_hour.moveBy(clock_steps - motor_hour.current_position);
 			motor_hour.moveBy(hour_position);
 		}
 		else {
@@ -38,11 +39,11 @@ int Clock::setHands(int hour_position, int minute_position){
 
 
 		if(motor_minute.current_position >= minute_position){
-			motor_minute.moveBy(1440 - motor_minute.current_position);
-			motor_minute.moveBy(minute_position + 1440);
+			motor_minute.moveBy(clock_steps - motor_minute.current_position);
+			motor_minute.moveBy(minute_position + clock_steps);
 		}
 		else {
-			motor_minute.moveBy((minute_position - motor_minute.current_position) + 1440);
+			motor_minute.moveBy((minute_position - motor_minute.current_position) + clock_steps);
 		}
 	}
 
