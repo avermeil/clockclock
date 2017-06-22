@@ -17,7 +17,7 @@ class Motor
     int pin_offset;
     int step_mask;
     int current_position;
-    int steps_left;
+    long steps_left;
     int steps_since_start;
     long step_delay;
     int speed_mod; //is either 1 (normal) or 2 (slow)

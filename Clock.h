@@ -15,10 +15,9 @@ class Clock
         Clock();
         int doStep();
         int setHands(int hour, int minute);
+        int doSetHands(int hour, int minute);
         Motor motor_hour, motor_minute;
-    private:
-    	unsigned long time;
-    	unsigned long last_step_time;
+
 };
 
 #endif

@@ -54,7 +54,6 @@ int Motor::getStepMask(){
     }
 
     current_position++;
-
     if(current_position >= steps_per_rotation){
         current_position = 0;
     }
@@ -64,15 +63,9 @@ int Motor::getStepMask(){
     steps_left--;
     steps_since_start++;
 
-    if(steps_left == 0 && previous_steps_left != 0){
-       // Serial.println(current_position);
-    }
+    long distance_from_edge = (min(steps_since_start,  steps_left));
 
-    //step_delay=2000;
-
-    int distance_from_edge = sqrt(min(steps_since_start,  steps_left));
-
-    step_delay = max(1750, 5000 - distance_from_edge * 170) * speed_mod;
+    step_delay = max(1200, 3000 - (distance_from_edge * 10)) * speed_mod;
 
     last_step_time = time;
 

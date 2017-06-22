@@ -55,8 +55,8 @@ void setup() {
 }
 
 void loop() {
-    count ++;
-    // int clock1_mask = clock_1.doStep();
+    // count ++;
+
     digitalWrite(latchPin, LOW);
 
     shift(clock_1.doStep());
@@ -68,14 +68,14 @@ void loop() {
 
     digitalWrite(latchPin, HIGH);
 
-    // if(count % 100 == 0){
 
-    //     int sensorValue = analogRead(A5);
-    //     // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
-    //     float voltage = sensorValue * (5.0 / 1023.0);
-    //     // print out the value you read:
-    //     Serial.println(voltage);
-    // }
+
+    // int sensorValue = analogRead(A5);
+    // // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
+    // float voltage = sensorValue * (5.0 / 1023.0);
+    // // print out the value you read:
+    // Serial.println(voltage);
+    
 
 
     if(auto_mode){
@@ -149,12 +149,12 @@ void showDigit(int digit){
 }
 
 void showZero(){
-    // clock_1.setHands(bottom, right );
+    clock_1.setHands(bottom, right );
     clock_2.setHands(bottom, left );
-    // clock_3.setHands(top, bottom );
-    // clock_4.setHands(top, bottom );
-    // clock_5.setHands(top, right );
-    // clock_6.setHands(top, left );
+    clock_3.setHands(top, bottom );
+    clock_4.setHands(top, bottom );
+    clock_5.setHands(top, right );
+    clock_6.setHands(top, left );
 }
 
 void showOne(){
