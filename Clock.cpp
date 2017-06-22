@@ -29,13 +29,13 @@ int Clock::doStep(){
 int Clock::setHands(int hour_position, int minute_position){
 
 	if(motor_hour.current_position != hour_position || motor_minute.current_position != minute_position){
-		if(motor_hour.current_position >= hour_position){
-			motor_hour.moveBy(clock_steps - motor_hour.current_position);
-			motor_hour.moveBy(hour_position);
-		}
-		else {
-			motor_hour.moveBy(hour_position - motor_hour.current_position);
-		}
+		// if(motor_hour.current_position >= hour_position){
+		// 	motor_hour.moveBy(clock_steps - motor_hour.current_position);
+		// 	motor_hour.moveBy(hour_position);
+		// }
+		// else {
+		// 	motor_hour.moveBy(hour_position - motor_hour.current_position);
+		// }
 
 
 		if(motor_minute.current_position >= minute_position){

@@ -72,7 +72,7 @@ int Motor::getStepMask(){
 
     int distance_from_edge = sqrt(min(steps_since_start,  steps_left));
 
-    step_delay = max(1750, 2000 - distance_from_edge * 170) * speed_mod;
+    step_delay = max(1750, 5000 - distance_from_edge * 170) * speed_mod;
 
     last_step_time = time;
 

@@ -1,4 +1,4 @@
-#include <Clock.h>
+#include "Clock.h"
 
 //Pin connected to ST_CP of 74HC595
 int latchPin = 8;
@@ -25,8 +25,9 @@ int right =  (rotation_steps * 3 / 4) - 6;
 int out = rotation_steps / 8;
 
 int auto_mode = 0;
-unsigned long refresh_interval = 10000;
+unsigned long refresh_interval = 15000;
 unsigned long last_refresh_time = 0;
+unsigned long count = 0;
 int current_digit = 0;
 
 Clock clock_1;
@@ -51,12 +52,10 @@ void setup() {
     Serial.println(top);
     Serial.println(right);
 
-
-
 }
 
 void loop() {
-    
+    count ++;
     // int clock1_mask = clock_1.doStep();
     digitalWrite(latchPin, LOW);
 
@@ -68,6 +67,15 @@ void loop() {
     shift(clock_6.doStep());
 
     digitalWrite(latchPin, HIGH);
+
+    // if(count % 100 == 0){
+
+    //     int sensorValue = analogRead(A5);
+    //     // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
+    //     float voltage = sensorValue * (5.0 / 1023.0);
+    //     // print out the value you read:
+    //     Serial.println(voltage);
+    // }
 
 
     if(auto_mode){
@@ -141,11 +149,11 @@ void showDigit(int digit){
 }
 
 void showZero(){
-    //clock_1.setHands(bottom, right );
-    // clock_2.setHands(bottom, left );
+    // clock_1.setHands(bottom, right );
+    clock_2.setHands(bottom, left );
     // clock_3.setHands(top, bottom );
     // clock_4.setHands(top, bottom );
-     clock_5.setHands(top, right );
+    // clock_5.setHands(top, right );
     // clock_6.setHands(top, left );
 }
 
