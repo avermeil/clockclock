@@ -1,0 +1,6 @@
+{
+    "board": "arduino:sam:arduino_due_x_dbg",
+    "programmer": "arduino:arduinoisp",
+    "port": "/dev/cu.usbmodem14201",
+    "sketch": "clockclock.ino"
+}
