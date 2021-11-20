@@ -1,31 +1,8 @@
-// /*
-//   Analog Input
+// #include "SpeedyStepper.h"
 
-//   Demonstrates analog input by reading an analog sensor on analog pin 0 and
-//   turning on and off a light emitting diode(LED) connected to digital pin 13.
-//   The amount of time the LED will be on and off depends on the value obtained
-//   by analogRead().
+// SpeedyStepper stepper1;
 
-//   The circuit:
-//   - potentiometer
-//     center pin of the potentiometer to the analog input 0
-//     one side pin (either one) to ground
-//     the other side pin to +5V
-//   - LED
-//     anode (long leg) attached to digital output 13 through 220 ohm resistor
-//     cathode (short leg) attached to ground
-
-//   - Note: because most Arduinos have a built-in LED attached to pin 13 on the
-//     board, the LED is optional.
-
-//   created by David Cuartielles
-//   modified 30 Aug 2011
-//   By Tom Igoe
-
-//   This example code is in the public domain.
-
-//   https://www.arduino.cc/en/Tutorial/BuiltInExamples/AnalogInput
-// */
+// // In Setup(), assign IO pins used for Step and Direction:
 
 // int sensorPin = A0;  // select the input pin for the potentiometer
 // int ledPin = 2;      // select the pin for the LED
@@ -35,25 +12,36 @@
 // {
 //     // declare the ledPin as an OUTPUT:
 //     pinMode(ledPin, OUTPUT);
+//     stepper1.connectToPins(2, 11);
+//     stepper1.setStepsPerRevolution(720 * 2 * 5);
+//     stepper1.setSpeedInRevolutionsPerSecond(0.4);
+//     stepper1.setAccelerationInRevolutionsPerSecondPerSecond(0.05);
 //     Serial.begin(9600);
 // }
 
 // void loop()
 // {
-//     // read the value from the sensor:
+//     // stepper1.setupRelativeMoveInRevolutions(-1.5);
+
+//     // while (!stepper1.motionComplete())
+//     // {
+//     //     stepper1.processMovement();
+//     // }
+//     // delay(500);
+//     // read the value from the sensor :
 //     sensorValue = analogRead(sensorPin);
 //     int delayTime = sensorValue;
-//     // Serial.println(delayTime);
+//     Serial.println(delayTime);
 //     // turn the ledPin on
 //     digitalWrite(ledPin, HIGH);
 //     digitalWrite(LED_BUILTIN, HIGH);
 
 //     // stop the program for <sensorValue> milliseconds:
 
-//     delayMicroseconds(delayTime);
+//     delay(delayTime);
 //     // turn the ledPin off:
 //     digitalWrite(ledPin, LOW);
 //     digitalWrite(LED_BUILTIN, LOW);
 //     // stop the program for for <sensorValue> milliseconds:
-//     delayMicroseconds(delayTime);
+//     delay(delayTime);
 // }

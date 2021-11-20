@@ -1,23 +1,28 @@
 
 volatile byte counter = 0;
 
-byte stepss[8] = {
-    B10000000,
-    B10010000,
-    B00010000,
+byte stepss[][] = {
     B00110000,
     B00100000,
     B01100000,
     B01000000,
     B11000000,
+    B10000000,
+    B10010000,
+    B00010000,
 };
 
-const int pwm_resolution = 8;
+const int pwm_resolution = 3;
+
+int sin_table[pwm_resolution * 2];
+
 const int step_count = pwm_resolution * 8;
 
 byte more_steps[step_count];
 
 int pwm_step = 0;
+int power_reduction_counter = 0;
+// int power_reduction = 2;
 
 volatile int pwm_complete_per_step = 0;
 
@@ -35,6 +40,22 @@ void setup()
         more_steps[i] = stepss[index];
     }
 
+    for (int i = 0; i <= pwm_resolution * 2; i++)
+    {
+        float rad = (360 * i * 3.14159265359 / (pwm_resolution * 4)) / 180;
+
+        float t = sin(rad) * pwm_resolution;
+
+        Serial.print(t);
+        Serial.print(" , ");
+
+        sin_table[i] = round(t);
+
+        Serial.println(sin_table[i]);
+
+        //Serial.println(sin_table[i]);
+    }
+
     attachInterrupt(digitalPinToInterrupt(2), nextStep, RISING);
 }
 
@@ -49,24 +70,37 @@ void loop()
         actual_counter = actual_counter - step_count;
     }
 
-    PORTD = more_steps[actual_counter];
-
     pwm_step++;
     if (pwm_step == pwm_resolution)
     {
         pwm_step = 0;
         pwm_complete_per_step++;
     }
+
+    PORTD = more_steps[actual_counter];
+    // power_reduction_counter++;
+    // if (power_reduction_counter == power_reduction)
+    // {
+    //     power_reduction_counter = 0;
+    //     PORTD = more_steps[actual_counter];
+    // }
+
+    // else
+    // {
+
+    //     PORTD = B00000000;
+    // }
 }
 
 void nextStep()
 {
+
     counter++;
+
     if (counter >= step_count)
     {
         counter = 0;
-        Serial.println(pwm_complete_per_step);
     }
-
+    Serial.println(counter);
     pwm_complete_per_step = 0;
 }
