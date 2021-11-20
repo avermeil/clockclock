@@ -14,34 +14,34 @@
 //     pinMode(ledPin, OUTPUT);
 //     stepper1.connectToPins(2, 11);
 //     stepper1.setStepsPerRevolution(720 * 2 * 5);
-//     stepper1.setSpeedInRevolutionsPerSecond(0.4);
-//     stepper1.setAccelerationInRevolutionsPerSecondPerSecond(0.05);
+//     stepper1.setSpeedInRevolutionsPerSecond(0.7);
+//     stepper1.setAccelerationInRevolutionsPerSecondPerSecond(0.03);
 //     Serial.begin(9600);
 // }
 
 // void loop()
 // {
-//     // stepper1.setupRelativeMoveInRevolutions(-1.5);
+//     stepper1.setupRelativeMoveInRevolutions(-2);
 
-//     // while (!stepper1.motionComplete())
-//     // {
-//     //     stepper1.processMovement();
-//     // }
-//     // delay(500);
+//     while (!stepper1.motionComplete())
+//     {
+//         stepper1.processMovement();
+//     }
+//     delay(500);
 //     // read the value from the sensor :
-//     sensorValue = analogRead(sensorPin);
-//     int delayTime = sensorValue;
-//     Serial.println(delayTime);
-//     // turn the ledPin on
-//     digitalWrite(ledPin, HIGH);
-//     digitalWrite(LED_BUILTIN, HIGH);
+//     // sensorValue = analogRead(sensorPin);
+//     // int delayTime = sensorValue;
+//     // Serial.println(delayTime);
+//     // // turn the ledPin on
+//     // digitalWrite(ledPin, HIGH);
+//     // digitalWrite(LED_BUILTIN, HIGH);
 
-//     // stop the program for <sensorValue> milliseconds:
+//     // // stop the program for <sensorValue> milliseconds:
 
-//     delay(delayTime);
-//     // turn the ledPin off:
-//     digitalWrite(ledPin, LOW);
-//     digitalWrite(LED_BUILTIN, LOW);
-//     // stop the program for for <sensorValue> milliseconds:
-//     delay(delayTime);
+//     // delay(delayTime);
+//     // // turn the ledPin off:
+//     // digitalWrite(ledPin, LOW);
+//     // digitalWrite(LED_BUILTIN, LOW);
+//     // // stop the program for for <sensorValue> milliseconds:
+//     // delay(delayTime);
 // }

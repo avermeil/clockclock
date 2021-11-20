@@ -1,22 +1,22 @@
 
 volatile byte counter = 0;
 
-byte stepss[][] = {
+byte stepss[] = {
     B00110000,
     B00100000,
-    B01100000,
+    // B01100000,
     B01000000,
     B11000000,
     B10000000,
-    B10010000,
+    // B10010000,
     B00010000,
 };
 
-const int pwm_resolution = 3;
+const int pwm_resolution = 5;
 
 int sin_table[pwm_resolution * 2];
 
-const int step_count = pwm_resolution * 8;
+const int step_count = pwm_resolution * (sizeof(stepss) / sizeof(stepss[0]));
 
 byte more_steps[step_count];
 
@@ -100,7 +100,8 @@ void nextStep()
     if (counter >= step_count)
     {
         counter = 0;
+        Serial.println(pwm_complete_per_step);
     }
-    Serial.println(counter);
+
     pwm_complete_per_step = 0;
 }
