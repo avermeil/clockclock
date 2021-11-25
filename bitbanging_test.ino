@@ -7,8 +7,8 @@
 // int pwm_step = 0;
 // unsigned long long last_pwm_step = 0;
 // const int pwm_step_time = 2;
-// const int pwm_resolution = 8;
-// int power_reduction = 0;
+
+// const int pwm_resolution = 6;
 
 // const int steps_per_rotation = 720 * pwm_resolution;
 // unsigned long long current_step = 0;
@@ -19,8 +19,8 @@
 
 // unsigned long long last_step = 0;
 
-// long max_speed = 8000 / pwm_resolution;
-// long min_speed = 40000 / pwm_resolution;
+// long max_speed = 80 / pwm_resolution;
+// long min_speed = 20000 / pwm_resolution;
 // long step_time = min_speed;
 
 // unsigned long long acceleration_timer = 50000;
@@ -35,7 +35,7 @@
 // int previous_mask = 0;
 
 // int alpha_index = 0;
-// int beta_index = pwm_resolution * 0.75;
+// int beta_index = 8; //pwm_resolution * 0.75;
 
 // void setup()
 
@@ -43,6 +43,21 @@
 //     Serial.begin(74880);
 
 //     pinMode(latchPin, OUTPUT);
+
+//     int manual_table[] = {
+//         0,
+//         2,
+//         8,
+//         16,
+//         22,
+//         24,
+//         24,
+//         24,
+//         22,
+//         16,
+//         8,
+//         2,
+//         0};
 
 //     for (int i = 0; i <= pwm_resolution * 2; i++)
 //     {
@@ -53,12 +68,14 @@
 //         Serial.print(t);
 //         Serial.print(" , ");
 
-//         sin_table[i] = round(t);
+//         // sin_table[i] = ceil(t);
+//         sin_table[i] = manual_table[i] / 2;
 
 //         Serial.println(sin_table[i]);
-
-//         //Serial.println(sin_table[i]);
 //     }
+
+//     // set pins 4,5,6,7 to output
+//     DDRD = DDRD | B11110000;
 
 //     last_pwm_step = micros();
 //     last_step = step_time;
@@ -92,27 +109,27 @@
 //         return;
 //     }
 
-//     if (last_acceleration_time < current_time - acceleration_timer)
-//     {
-//         last_acceleration_time = current_time;
+//     // if (last_acceleration_time < current_time - acceleration_timer)
+//     // {
+//     //     last_acceleration_time = current_time;
 
-//         int extra = acceleration_direction * (sqrt(abs((max_speed - step_time) * 20)) + 1);
-//         step_time += extra;
+//     //     int extra = acceleration_direction * (sqrt(abs((max_speed - step_time) * 20)) + 1);
+//     //     step_time += extra;
 
-//         if (step_time > min_speed)
-//         {
-//             acceleration_direction = -1;
-//             stop_until = current_time + 1000000;
-//         }
-//         if (step_time < max_speed)
-//         {
-//             acceleration_direction = 1;
+//     //     if (step_time > min_speed)
+//     //     {
+//     //         acceleration_direction = -1;
+//     //         stop_until = current_time + 1000000;
+//     //     }
+//     //     if (step_time < max_speed)
+//     //     {
+//     //         acceleration_direction = 1;
 
-//             //      int sensorValue = analogRead(A5);
-//             //      float voltage = sensorValue * (5.0 / 1023.0);
-//             //      Serial.println(voltage);
-//         }
-//     }
+//     //         //      int sensorValue = analogRead(A5);
+//     //         //      float voltage = sensorValue * (5.0 / 1023.0);
+//     //         //      Serial.println(voltage);
+//     //     }
+//     // }
 
 //     if (last_step < current_time - step_time)
 //     {
@@ -135,15 +152,6 @@
 //     int distance_from_qt = abs(min(current_step, steps_per_rotation / 2) - quarter_turn);
 
 //     distance_from_qt -= steps_per_rotation / 6;
-
-//     if (distance_from_qt < 0)
-//     {
-//         power_reduction = 0;
-//     }
-//     else
-//     {
-//         power_reduction = 0; //distance_from_qt / 500;
-//     }
 
 //     current_step++;
 
@@ -185,54 +193,68 @@
 //         d_power = sin_table[beta_index - (pwm_resolution * 2)] + flattener;
 //     }
 
-//     //    Serial.println(a_power);
-//     //  Serial.print(",");
-//     //  Serial.print(-b_power);
-//     //  Serial.print(",");
-//     //
-//     //  Serial.print(c_power);
-//     //  Serial.print(",");
-//     //
-//     //  Serial.println(-d_power);
+//     // Serial.print(a_power);
+//     // Serial.print(",");
+//     // Serial.print(-b_power);
+//     // Serial.print(",");
+
+//     // Serial.print(c_power);
+//     // Serial.print(",");
+
+//     // Serial.println(-d_power);
+
+//     // Serial.print(a_power);
+//     // Serial.print(",");
+//     // Serial.print(-b_power);
+//     // Serial.print(",");
+
+//     // Serial.print(c_power);
+//     // Serial.print(",");
+
+//     // Serial.println(-d_power);
 // }
 
 // inline void pwm()
 // {
-
-//     if (pwm_step >= pwm_resolution + power_reduction)
+//     int scale_mul = 2;
+//     if (pwm_step >= pwm_resolution * scale_mul)
 //     {
 //         pwm_step = 0;
 //     }
 
 //     int mask = 0b0000;
-
-//     if (a_power >= pwm_step)
+//     int temp_pwm_step = pwm_step;
+//     if (a_power >= temp_pwm_step * 1)
 //     {
 //         mask += 0b0001;
 //     }
-//     if (b_power >= pwm_step)
+//     if (b_power >= temp_pwm_step * 1)
 //     {
 //         mask += 0b0010;
 //     }
-//     if (c_power >= pwm_step)
+//     if (c_power >= temp_pwm_step * 1)
 //     {
 //         mask += 0b0100;
 //     }
-//     if (d_power >= pwm_step)
+//     if (d_power >= temp_pwm_step * 1)
 //     {
 //         mask += 0b1000;
 //     }
 
-//     if (mask != previous_mask)
-//     {
-//         previous_mask = mask;
+//     PORTD = mask << 4;
+//     // Serial.println(pwm_step);
 
-//         digitalWriteDirectLow(latchPin);
+//     // if (mask != previous_mask)
+//     // {
 
-//         SPI.transfer(mask);
+//     //     previous_mask = mask;
 
-//         digitalWriteDirectHigh(latchPin);
-//     }
+//     //     digitalWriteDirectLow(latchPin);
+
+//     //     SPI.transfer(mask);
+
+//     //     digitalWriteDirectHigh(latchPin);
+//     // }
 
 //     //SPI.endTransaction();
 
@@ -242,11 +264,11 @@
 // inline void digitalWriteDirectHigh(int pin)
 // {
 //     //digitalWrite(pin, HIGH);
-//     g_APinDescription[pin].pPort->PIO_SODR = g_APinDescription[pin].ulPin;
+//     // g_APinDescription[pin].pPort->PIO_SODR = g_APinDescription[pin].ulPin;
 // }
 
 // inline void digitalWriteDirectLow(int pin)
 // {
 //     //digitalWrite(pin, LOW);
-//     g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
+//     // g_APinDescription[pin].pPort->PIO_CODR = g_APinDescription[pin].ulPin;
 // }

@@ -37,6 +37,9 @@
 // long long mega_counter = 0;
 // volatile int pwm_complete_per_step = 0;
 
+// unsigned long long last_step = 0;
+// long step_time = 1000;
+
 // void setup()
 // {
 //     Serial.begin(9600);
@@ -89,6 +92,14 @@
 //     }
 
 //     PORTD = more_steps[actual_counter];
+
+//     long current_time = micros();
+//     if (last_step < current_time - step_time)
+//     {
+//         nextStep();
+//         last_step = current_time;
+//     }
+
 //     // power_reduction_counter++;
 //     // if (power_reduction_counter == power_reduction)
 //     // {
