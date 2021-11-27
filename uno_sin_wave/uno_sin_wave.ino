@@ -35,7 +35,7 @@ const byte randomized_pwm_indexes[] = {0, 11, 1, 10, 2, 9, 3, 8, 4, 7, 5, 6}; //
 
 unsigned long last_step_time = 0;
 
-unsigned int step_time = 1000;
+unsigned int step_time = 3000;
 
 byte pwm_step = 0;
 byte alpha_index = 0;
