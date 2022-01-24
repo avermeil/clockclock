@@ -50,12 +50,10 @@ byte d_power = 0;
 
 byte current_pwm_mask;
 
-byte step_index = 0;
+volatile byte step_index = 0;
 
 void setup()
 {
-    Serial.begin(9600);
-
     /*
         Global variables! love em
     */
@@ -83,12 +81,16 @@ void setup()
     }
 
     // set pins 4,5,6,7 to output
-    DDRD = DDRD | B11110000;
+    MCUCR |= B00000011; //watch for rising edge
+    GIMSK |= B01000000; //enable external interrupt
+    SREG |= B10000000;  //global interrupt enable
+
+    DDRB |= B00011011;
 }
 
 void loop()
 {
-    PORTD = actual_table[step_index][pwm_step];
+    PORTB = actual_table[step_index][pwm_step];
 
     pwm_step++;
     if (pwm_step == pwm_scale)
@@ -96,18 +98,29 @@ void loop()
         pwm_step = 0;
     }
 
-    unsigned long current_time = micros();
+    // unsigned long current_time = micros();
 
-    if (last_step_time < current_time - step_time)
+    // if (last_step_time < current_time - step_time)
+    // {
+
+    //     last_step_time = current_time;
+
+    //     step_index++;
+    //     if (step_index == full_cycle_step_count)
+    //     {
+    //         step_index = 0;
+    //     }
+    // }
+}
+
+// NOTE : leaving PB0 into the arduino messes this interrupt up.
+ISR(INT0_vect)
+{
+    step_index--;
+
+    if (step_index == 0)
     {
-
-        last_step_time = current_time;
-
-        step_index--;
-        if (step_index == 0)
-        {
-            step_index = full_cycle_step_count;
-        }
+        step_index = full_cycle_step_count;
     }
 }
 
@@ -146,21 +159,6 @@ void step()
         d_power = sin_table[beta_index - half_cycle_step_count];
     }
 
-    // Serial.print(alpha_index);
-    // Serial.print(",");
-    // Serial.print(beta_index);
-    // Serial.print(",");
-
-    // Serial.print(a_power);
-    // Serial.print(",");
-    // Serial.print(-b_power);
-    // Serial.print(",");
-
-    // Serial.print(c_power);
-    // Serial.print(",");
-
-    // Serial.println(-d_power);
-
     alpha_index++;
 
     beta_index++;
@@ -173,20 +171,20 @@ void setPwmMask()
 
     if (a_power >= pwm_step)
     {
-        mask += 0b0001;
+        mask += 0b00001;
     }
     if (b_power >= pwm_step)
     {
-        mask += 0b0010;
+        mask += 0b00010;
     }
     if (c_power >= pwm_step)
     {
-        mask += 0b0100;
+        mask += 0b01000;
     }
     if (d_power >= pwm_step)
     {
-        mask += 0b1000;
+        mask += 0b10000;
     }
 
-    current_pwm_mask = mask << 4;
+    current_pwm_mask = mask;
 }
