@@ -48,19 +48,20 @@ void setTargetPos(int targetPos, int extraTurns, bool clockwise)
 
     int currentPos = reportedPos - stepsOffset;
     int stepsToMake = 0;
+    int extraSteps = extraTurns * SINGLE_ROTATION_STEPS;
 
     if (currentPos < targetPos)
     {
-        stepsToMake = targetPos - currentPos;
+        stepsToMake = targetPos - currentPos + extraSteps;
     }
     else if (currentPos > targetPos)
     {
-        stepsToMake = SINGLE_ROTATION_STEPS + targetPos - currentPos;
+        stepsToMake = SINGLE_ROTATION_STEPS + targetPos - currentPos + extraSteps;
     }
 
     if (!clockwise)
     {
-        stepsToMake = stepsToMake - SINGLE_ROTATION_STEPS;
+        stepsToMake = stepsToMake - SINGLE_ROTATION_STEPS - (extraSteps * 2);
     }
 
     Serial.print("clockwise: ");
