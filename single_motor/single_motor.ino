@@ -76,40 +76,6 @@ void setTargetPos(int targetPos, int extraTurns, bool clockwise)
     stepper2.setTargetPositionRelativeInSteps(stepsToMake);
 }
 
-// TODO: figure out why calibration sometimes is offset. Perhaps lock for longer than 1 step.
-int calibrationBlockedUntilStep = MIN_INT;
-
-void calibratePosition()
-{
-    int sensorValue2 = analogRead(A1);
-    int currentPos = getReportedPos();
-
-    if (sensorValue2 < 500 && isClockwise)
-    {
-
-        if (calibrationBlockedUntilStep < currentPos)
-        {
-            calibrationBlockedUntilStep = currentPos + 500;
-
-            stepsOffset = currentPos - magnetPosition;
-
-            Serial.print("entered the zone at ");
-            Serial.print(currentPos);
-            Serial.print(" and blocking until ");
-            Serial.println(calibrationBlockedUntilStep);
-        }
-        else
-        {
-            Serial.print("blocked at ");
-            Serial.println(currentPos);
-        }
-    }
-    else if (calibrationBlockedUntilStep < currentPos)
-    {
-        calibrationBlockedUntilStep = MIN_INT;
-    }
-}
-
 int getReportedPos()
 {
     int reportedPos = stepper2.getCurrentPositionInSteps();
@@ -119,6 +85,35 @@ int getReportedPos()
     }
     // 360 + (-450 % 360) = 270
     return SINGLE_ROTATION_STEPS + (stepper2.getCurrentPositionInSteps() % SINGLE_ROTATION_STEPS);
+}
+
+int calibrationBlockedUntilStep = MIN_INT;
+
+void calibratePosition()
+{
+    int sensorValue2 = analogRead(A1);
+    int currentPos = getReportedPos();
+
+    if (calibrationBlockedUntilStep < currentPos)
+    {
+        if (sensorValue2 < 500 && isClockwise)
+        {
+            calibrationBlockedUntilStep = currentPos + 500;
+
+            stepsOffset = currentPos - magnetPosition;
+
+            // Serial.print("entered the zone at ");
+            // Serial.print(currentPos);
+            // Serial.print(" and blocking until ");
+            // Serial.println(calibrationBlockedUntilStep);
+        }
+        else
+        {
+            // Serial.print("blocked at ");
+            // Serial.println(currentPos);
+            calibrationBlockedUntilStep = MIN_INT;
+        }
+    }
 }
 
 void loop()
