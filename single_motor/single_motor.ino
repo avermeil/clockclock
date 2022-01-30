@@ -70,7 +70,7 @@ void setTargetPos(int targetPos, int extraTurns, bool clockwise)
 }
 
 // TODO: figure out why calibration sometimes is offset. Perhaps lock for longer than 1 step.
-int enteredMagnetOnStep = 0;
+int calibrationBlockedUntilStep = 0;
 
 void calibratePosition()
 {
@@ -80,7 +80,7 @@ void calibratePosition()
     {
         if (!just_zoned)
         {
-            enteredMagnetOnStep = getCurrentPos();
+            calibrationBlockedUntilStep = getCurrentPos() + 200;
 
             stepsOffset = getCurrentPos() - magnetPosition;
             Serial.println("in the zone");

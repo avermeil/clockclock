@@ -1,6 +1,6 @@
 {
-    "board": "arduino:sam:arduino_due_x_dbg",
-    "programmer": "arduino:arduinoisp",
+    "board": "arduino:avr:uno",
+    "programmer": "arduino:avrisp",
     "port": "/dev/cu.usbmodem14201",
-    "sketch": "clockclock.ino"
+    "sketch": "vid6606_tester/vid6606_tester.ino"
 }
