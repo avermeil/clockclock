@@ -2,12 +2,16 @@
 
 FlexyStepper stepper2;
 
+const int MIN_INT = -32768;
+const int SINGLE_ROTATION_STEPS = 4320;
 int stepsOffset = 0;
 bool isClockwise = true;
-int magnetPosition = 1390;
+int magnetPosition = 1230;
 
 void setup()
 {
+    Serial.begin(115200);
+
     pinMode(2, OUTPUT); // B dir
     pinMode(3, OUTPUT); // B step
     pinMode(4, OUTPUT); // A step
@@ -18,12 +22,12 @@ void setup()
     pinMode(9, OUTPUT); // C dir
 
     stepper2.connectToPins(4, 5);
-    stepper2.setSpeedInStepsPerSecond(1000);
-    stepper2.setAccelerationInStepsPerSecondPerSecond(500);
 
-    Serial.begin(115200);
+    // go fast for initial calibration
+    stepper2.setSpeedInStepsPerSecond(3000);
+    stepper2.setAccelerationInStepsPerSecondPerSecond(2000);
 
-    stepper2.setTargetPositionRelativeInSteps(4320 * 2);
+    stepper2.setTargetPositionRelativeInSteps(SINGLE_ROTATION_STEPS);
 
     while (!stepper2.motionComplete())
     {
@@ -31,13 +35,16 @@ void setup()
         calibratePosition();
     }
 
+    // set speeds
+    stepper2.setSpeedInStepsPerSecond(1000);
+    stepper2.setAccelerationInStepsPerSecondPerSecond(500);
     setTargetPos(0, 0, true);
 }
 
 void setTargetPos(int targetPos, int extraTurns, bool clockwise)
 {
     isClockwise = clockwise;
-    int reportedPos = getCurrentPos();
+    int reportedPos = getReportedPos();
 
     int currentPos = reportedPos - stepsOffset;
     int stepsToMake = 0;
@@ -48,12 +55,12 @@ void setTargetPos(int targetPos, int extraTurns, bool clockwise)
     }
     else if (currentPos > targetPos)
     {
-        stepsToMake = 4320 + targetPos - currentPos;
+        stepsToMake = SINGLE_ROTATION_STEPS + targetPos - currentPos;
     }
 
     if (!clockwise)
     {
-        stepsToMake = stepsToMake - 4320;
+        stepsToMake = stepsToMake - SINGLE_ROTATION_STEPS;
     }
 
     Serial.print("clockwise: ");
@@ -70,31 +77,48 @@ void setTargetPos(int targetPos, int extraTurns, bool clockwise)
 }
 
 // TODO: figure out why calibration sometimes is offset. Perhaps lock for longer than 1 step.
-int calibrationBlockedUntilStep = 0;
+int calibrationBlockedUntilStep = MIN_INT;
 
 void calibratePosition()
 {
     int sensorValue2 = analogRead(A1);
+    int currentPos = getReportedPos();
 
     if (sensorValue2 < 500 && isClockwise)
     {
-        if (!just_zoned)
-        {
-            calibrationBlockedUntilStep = getCurrentPos() + 200;
 
-            stepsOffset = getCurrentPos() - magnetPosition;
-            Serial.println("in the zone");
+        if (calibrationBlockedUntilStep < currentPos)
+        {
+            calibrationBlockedUntilStep = currentPos + 500;
+
+            stepsOffset = currentPos - magnetPosition;
+
+            Serial.print("entered the zone at ");
+            Serial.print(currentPos);
+            Serial.print(" and blocking until ");
+            Serial.println(calibrationBlockedUntilStep);
+        }
+        else
+        {
+            Serial.print("blocked at ");
+            Serial.println(currentPos);
         }
     }
-    else
+    else if (calibrationBlockedUntilStep < currentPos)
     {
-        just_zoned = false;
+        calibrationBlockedUntilStep = MIN_INT;
     }
 }
 
-int getCurrentPos()
+int getReportedPos()
 {
-    return stepper2.getCurrentPositionInSteps() % 4320;
+    int reportedPos = stepper2.getCurrentPositionInSteps();
+    if (reportedPos >= 0)
+    {
+        return stepper2.getCurrentPositionInSteps() % SINGLE_ROTATION_STEPS;
+    }
+    // 360 + (-450 % 360) = 270
+    return SINGLE_ROTATION_STEPS + (stepper2.getCurrentPositionInSteps() % SINGLE_ROTATION_STEPS);
 }
 
 void loop()
