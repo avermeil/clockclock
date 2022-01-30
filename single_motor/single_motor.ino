@@ -19,9 +19,8 @@ void setup()
     pinMode(9, OUTPUT); // C dir
 
     stepper2.connectToPins(4, 5);
-    stepper2.setStepsPerRevolution(720 * 6);
-    stepper2.setSpeedInRevolutionsPerSecond(0.2);
-    stepper2.setAccelerationInRevolutionsPerSecondPerSecond(0.2);
+    stepper2.setSpeedInStepsPerSecond(1000);
+    stepper2.setAccelerationInStepsPerSecondPerSecond(500);
 
     Serial.begin(115200);
 
