@@ -1,78 +1,118 @@
 #include "Arduino.h"
 #include "Motor.h"
-// int steps[4] = {
-//     0b1100,
-//     0b0110,
-//     0b0011,
-//     0b1001
-// };
+#include "FlexyStepperLocal.h"
 
+const int MIN_INT = -32768;
+const int SINGLE_ROTATION_STEPS = 4320;
 
-int steps[8] = {
-    0b1000,
-    0b1001,
-    0b0001,
-    0b0011,
-    0b0010,
-    0b0110,
-    0b0100,
-    0b1100
-};
-
-
-int steps_per_rotation = 1440;
-
-Motor::Motor(){
-    steps_since_start = 0;
-    steps_left = 0;
-    pin_offset = 0;
-    current_step = 0;
-    current_position = 0;
-    step_mask = 0b0000;
-    speed_mod = 1;
-    time = micros();
+Motor::Motor(int _stepPin, int _dirPin, int _hallPin, bool _reverseDirection, int _magnetPosition)
+{
+    stepsOffset = 0;
+    isClockwise = true;
+    magnetPosition = _magnetPosition; //1230;
+    calibrationBlockedUntilStep = MIN_INT;
+    stepPin = _stepPin;
+    dirPin = _dirPin;
+    hallPin = _hallPin;
+    reverseDirection = _reverseDirection;
+    stepper2.connectToPins(stepPin, dirPin, !reverseDirection);
 }
 
-int Motor::getStepMask(){
+void Motor::init()
+{
+    // go fast for initial calibration
+    stepper2.setSpeedInStepsPerSecond(3000);
+    stepper2.setAccelerationInStepsPerSecondPerSecond(2000);
 
-    time = micros();
+    stepper2.setTargetPositionRelativeInSteps(SINGLE_ROTATION_STEPS * 1);
 
-    if(last_step_time >= (time - step_delay)){
-        return step_mask;
+    while (!stepper2.motionComplete())
+    {
+        stepper2.processMovement();
+        calibratePosition();
     }
 
-    int previous_steps_left = steps_left;
-
-    if(steps_left == 0){
-        steps_since_start = 0;
-        return step_mask;
-    }
-
-    current_step ++;
-    if(current_step > 7){
-        current_step = 0;
-    }
-
-    current_position++;
-    if(current_position >= steps_per_rotation){
-        current_position = 0;
-    }
-
-    step_mask = steps[current_step];
-
-    steps_left--;
-    steps_since_start++;
-
-    long distance_from_edge = (min(steps_since_start,  steps_left));
-
-    step_delay = max(1200, 3000 - (distance_from_edge * 10)) * speed_mod;
-
-    last_step_time = time;
-
-    return step_mask;
+    // set speeds
+    stepper2.setSpeedInStepsPerSecond(1000);
+    stepper2.setAccelerationInStepsPerSecondPerSecond(500);
+    setTargetPos(0, 0, true);
 }
 
-int Motor::moveBy(int steps_to_move){
-    steps_left += steps_to_move;
-    return 0;
+void Motor::setTargetPos(int targetPos, int extraTurns, bool clockwise)
+{
+    isClockwise = clockwise;
+    int reportedPos = getReportedPos();
+
+    int currentPos = reportedPos - stepsOffset;
+    int stepsToMake = 0;
+    int extraSteps = extraTurns * SINGLE_ROTATION_STEPS;
+
+    if (currentPos < targetPos)
+    {
+        stepsToMake = targetPos - currentPos + extraSteps;
+    }
+    else if (currentPos > targetPos)
+    {
+        stepsToMake = SINGLE_ROTATION_STEPS + targetPos - currentPos + extraSteps;
+    }
+
+    if (!clockwise)
+    {
+        stepsToMake = stepsToMake - SINGLE_ROTATION_STEPS - (extraSteps * 2);
+    }
+
+    // Serial.print("clockwise: ");
+    // Serial.println(clockwise);
+    // Serial.print("targetPos: ");
+    // Serial.println(targetPos);
+    // Serial.print("stepsOffset: ");
+    // Serial.println(stepsOffset);
+    // Serial.print("currentPos: ");
+    // Serial.println(currentPos);
+    // Serial.print("stepsToMake: ");
+    // Serial.println(stepsToMake);
+    stepper2.setTargetPositionRelativeInSteps(stepsToMake);
+}
+
+int Motor::getReportedPos()
+{
+    int reportedPos = stepper2.getCurrentPositionInSteps();
+    if (reportedPos >= 0)
+    {
+        return stepper2.getCurrentPositionInSteps() % SINGLE_ROTATION_STEPS;
+    }
+    // 360 + (-450 % 360) = 270
+    return SINGLE_ROTATION_STEPS + (stepper2.getCurrentPositionInSteps() % SINGLE_ROTATION_STEPS);
+}
+
+void Motor::calibratePosition()
+{
+    int sensorValue2 = analogRead(hallPin);
+    int currentPos = getReportedPos();
+    if (calibrationBlockedUntilStep < currentPos)
+    {
+        if (sensorValue2 < 500 && isClockwise)
+        {
+            calibrationBlockedUntilStep = currentPos + 500;
+
+            stepsOffset = currentPos - magnetPosition;
+
+            // Serial.print("entered the zone at ");
+            // Serial.print(currentPos);
+            // Serial.print(" and blocking until ");
+            // Serial.println(calibrationBlockedUntilStep);
+        }
+        else
+        {
+            // Serial.print("blocked at ");
+            // Serial.println(currentPos);
+            calibrationBlockedUntilStep = MIN_INT;
+        }
+    }
+}
+
+void Motor::loop()
+{
+    stepper2.processMovement();
+    calibratePosition();
 }
