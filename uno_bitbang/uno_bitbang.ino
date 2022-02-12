@@ -2,14 +2,27 @@
 volatile byte counter = 0;
 
 byte stepss[] = {
-    B00110000,
-    B00100000,
-    B01000000,
-    B11000000,
-    B10000000,
+    B10010000,
     B00010000,
+    B01110000,
+    B01100000,
+    B11100000,
+    B10000000,
 };
 
+/*
+    forEach step
+        generate 25 pwm slots
+        for (range 0-25 = i)
+            for each pin
+                if pin power is above i
+                    generate byte with pin bit =1
+            sum pin bytes to get pwm step
+            save pwm step to slot
+
+        for each pin
+            fill the first x (0-25) slots with value at that bit (eg B01000000)
+*/
 const int pwm_resolution = 5;
 
 int sin_table[pwm_resolution * 2];
@@ -20,9 +33,12 @@ byte more_steps[step_count];
 
 int pwm_step = 0;
 int power_reduction_counter = 0;
-// int power_reduction = 2;
-
+int power_reduction = 2;
+long long mega_counter = 0;
 volatile int pwm_complete_per_step = 0;
+
+unsigned long long last_step = 0;
+long step_time = 3000;
 
 void setup()
 {
@@ -60,7 +76,7 @@ void setup()
 // the loop routine runs over and over again forever:
 void loop()
 {
-
+    mega_counter++;
     byte actual_counter = (counter + pwm_step);
 
     if (actual_counter >= step_count)
@@ -76,6 +92,14 @@ void loop()
     }
 
     PORTD = more_steps[actual_counter];
+
+    long current_time = micros();
+    if (last_step < current_time - step_time)
+    {
+        nextStep();
+        last_step = current_time;
+    }
+
     // power_reduction_counter++;
     // if (power_reduction_counter == power_reduction)
     // {
@@ -92,7 +116,10 @@ void loop()
 
 void nextStep()
 {
-
+    // if (mega_counter % power_reduction == 0)
+    // {
+    //     return;
+    // }
     counter++;
 
     if (counter >= step_count)

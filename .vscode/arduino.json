@@ -1,6 +1,7 @@
 {
-    "board": "arduino:sam:arduino_due_x_dbg",
+    "sketch": "single_motor\\single_motor.ino",
+    "configuration": "cpu=atmega328",
+    "board": "arduino:avr:nano",
     "programmer": "arduino:arduinoisp",
-    "port": "/dev/cu.usbmodem14201",
-    "sketch": "clockclock.ino"
+    "port": "COM3"
 }
