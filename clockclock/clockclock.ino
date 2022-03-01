@@ -8,10 +8,11 @@
 // Motor stepper4(8, 9, A2, false, 0);
 
 // First prod board
-Motor stepper1(5, 4, A3, false, 3450, 500, false);
-Motor stepper2(7, 6, A2, true, 1270, 511, true);
-Motor stepper3(3, 2, A7, true, 0, 522, false);
-Motor stepper4(9, 8, A6, false, 0, 524, true);
+Motor steppers[4] = {
+    Motor(5, 4, A3, false, 500, false),
+    Motor(7, 6, A2, true, 511, true),
+    Motor(3, 2, A7, true, 522, false),
+    Motor(9, 8, A6, false, 524, true)};
 
 void setup()
 {
@@ -20,18 +21,18 @@ void setup()
     Wire.onReceive(receiveEvent);
 
     Serial.begin(115200);
-    stepper1.init();
-    stepper2.init();
-    stepper3.init();
-    stepper4.init();
+    // steppers[0].init();
+    // steppers[1].init();
+    // steppers[2].init();
+    // steppers[3].init();
 }
 
 void loop()
 {
-    stepper1.loop();
-    stepper2.loop();
-    stepper3.loop();
-    stepper4.loop();
+    steppers[0].loop();
+    steppers[1].loop();
+    steppers[2].loop();
+    steppers[3].loop();
 
     if (Serial.available() > 0)
     {
@@ -39,29 +40,48 @@ void loop()
         int pos = command.substring(0, 1).toInt();
         bool clockwise = !command.substring(1).toInt();
 
-        stepper1.setTargetPos(pos * 540, 0, clockwise);
-        stepper2.setTargetPos(pos * 540, 0, clockwise);
+        // stepper1.setTargetPos(pos * 540, 0, clockwise);
+        // stepper2.setTargetPos(pos * 540, 0, clockwise);
     }
 }
 
 void receiveEvent(int howMany)
 {
-    Serial.println("got event!");
+    Serial.println(F("--------- NEW COMMAND:"));
 
-    Serial.println("stuff inside event!");
+    byte command = Wire.read();
+    byte hand = Wire.read();
+    Serial.print(F("command:"));
+    Serial.println(command);
+    Serial.print(F("hand:"));
+    Serial.println(hand);
 
-    byte lowPos = Wire.read();
-    byte highPos = Wire.read();
-    int pos = bytesToInt(lowPos, highPos);
-    Serial.println(pos);
+    if (command == 0)
+    {
+        byte lowMagnetPos = Wire.read();
+        byte highMagnetPos = Wire.read();
+        int magnetPos = bytesToInt(lowMagnetPos, highMagnetPos);
+        Serial.print(F("hallPos:"));
+        Serial.println(magnetPos);
 
-    byte lowMagnetPos = Wire.read();
-    byte highMagnetPos = Wire.read();
-    int magnetPos = bytesToInt(lowMagnetPos, highMagnetPos);
-    Serial.println(magnetPos);
+        steppers[hand].magnetPosition = magnetPos;
+    }
 
-    stepper1.magnetPosition = magnetPos;
-    stepper1.setTargetPos(pos, 0, 1);
+    if (command == 1)
+    {
+        byte lowPos = Wire.read();
+        byte highPos = Wire.read();
+        byte extraTurns = Wire.read();
+        byte clockwise = Wire.read();
+        int pos = bytesToInt(lowPos, highPos);
+        Serial.print(F("target Pos:"));
+        Serial.println(pos);
+        Serial.print(F("clockwise:"));
+        Serial.println(clockwise);
+        Serial.print(F("extraTurns:"));
+        Serial.println(extraTurns);
+        steppers[hand].setTargetPos(pos, extraTurns, clockwise);
+    }
 }
 
 int bytesToInt(byte low, byte high)

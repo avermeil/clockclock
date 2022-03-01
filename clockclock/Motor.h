@@ -12,12 +12,12 @@ public:
         int _dirPin,
         int _hallPin,
         bool _reverseDirection,
-        int _magnetPosition,
         int _magnetBaseline,
         bool _magnetFlipped);
   void init();
   void setTargetPos(int targetPos, int extraTurns, bool clockwise);
   int getReportedPos();
+  int normalisePosition(int reported);
   void calibratePosition();
   void setSpeed(int stepsPerSecond);
   void loop();
