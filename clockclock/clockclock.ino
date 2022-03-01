@@ -1,22 +1,37 @@
+#include <Wire.h>
 #include "./Motor.h"
 
-Motor stepper1(6, 7, A0, true, 1270);
-Motor stepper2(4, 5, A1, false, 1230);
-Motor stepper3(3, 2, A2, false, 0);
-Motor stepper4(8, 9, A2, false, 0);
+// tester board:
+// Motor stepper1(6, 7, A0, true, 1270);
+// Motor stepper2(4, 5, A1, false, 1230);
+// Motor stepper3(3, 2, A2, false, 0);
+// Motor stepper4(8, 9, A2, false, 0);
+
+// First prod board
+Motor stepper1(5, 4, A3, false, 3450, 500, false);
+Motor stepper2(7, 6, A2, true, 1270, 511, true);
+Motor stepper3(3, 2, A7, true, 0, 522, false);
+Motor stepper4(9, 8, A6, false, 0, 524, true);
 
 void setup()
 {
-    Serial.begin(115200);
+    Wire.begin(2);
 
+    Wire.onReceive(receiveEvent);
+
+    Serial.begin(115200);
     stepper1.init();
     stepper2.init();
+    stepper3.init();
+    stepper4.init();
 }
 
 void loop()
 {
     stepper1.loop();
     stepper2.loop();
+    stepper3.loop();
+    stepper4.loop();
 
     if (Serial.available() > 0)
     {
@@ -29,6 +44,30 @@ void loop()
     }
 }
 
+void receiveEvent(int howMany)
+{
+    Serial.println("got event!");
+
+    Serial.println("stuff inside event!");
+
+    byte lowPos = Wire.read();
+    byte highPos = Wire.read();
+    int pos = bytesToInt(lowPos, highPos);
+    Serial.println(pos);
+
+    byte lowMagnetPos = Wire.read();
+    byte highMagnetPos = Wire.read();
+    int magnetPos = bytesToInt(lowMagnetPos, highMagnetPos);
+    Serial.println(magnetPos);
+
+    stepper1.magnetPosition = magnetPos;
+    stepper1.setTargetPos(pos, 0, 1);
+}
+
+int bytesToInt(byte low, byte high)
+{
+    return ((high & 0xFF) << 8) | (low & 0xFF);
+}
 // void showZero()
 // {
 //     clock_1.setHands(bottom, right);

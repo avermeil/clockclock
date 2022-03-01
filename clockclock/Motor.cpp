@@ -5,36 +5,39 @@
 const int MIN_INT = -32768;
 const int SINGLE_ROTATION_STEPS = 4320;
 
-Motor::Motor(int _stepPin, int _dirPin, int _hallPin, bool _reverseDirection, int _magnetPosition)
+Motor::Motor(
+    int _stepPin,
+    int _dirPin,
+    int _hallPin,
+    bool _reverseDirection,
+    int _magnetPosition,
+    int _hallBaseline,
+    bool _hallFlipped)
 {
     stepsOffset = 0;
     isClockwise = true;
-    magnetPosition = _magnetPosition; //1230;
+    magnetPosition = _magnetPosition; // 1230;
     calibrationBlockedUntilStep = MIN_INT;
     stepPin = _stepPin;
     dirPin = _dirPin;
     hallPin = _hallPin;
     reverseDirection = _reverseDirection;
-    stepper2.connectToPins(stepPin, dirPin, !reverseDirection);
+    hallFlipped = _hallFlipped;
+    hallBaseline = _hallBaseline;
+    stepper.connectToPins(stepPin, dirPin, !reverseDirection);
+    setSpeed(1000);
 }
 
 void Motor::init()
 {
-    // go fast for initial calibration
-    stepper2.setSpeedInStepsPerSecond(3000);
-    stepper2.setAccelerationInStepsPerSecondPerSecond(2000);
+    stepper.setTargetPositionRelativeInSteps(SINGLE_ROTATION_STEPS * 1);
 
-    stepper2.setTargetPositionRelativeInSteps(SINGLE_ROTATION_STEPS * 1);
-
-    while (!stepper2.motionComplete())
+    while (!stepper.motionComplete())
     {
-        stepper2.processMovement();
+        stepper.processMovement();
         calibratePosition();
     }
 
-    // set speeds
-    stepper2.setSpeedInStepsPerSecond(1000);
-    stepper2.setAccelerationInStepsPerSecondPerSecond(500);
     setTargetPos(0, 0, true);
 }
 
@@ -71,34 +74,39 @@ void Motor::setTargetPos(int targetPos, int extraTurns, bool clockwise)
     // Serial.println(currentPos);
     // Serial.print("stepsToMake: ");
     // Serial.println(stepsToMake);
-    stepper2.setTargetPositionRelativeInSteps(stepsToMake);
+    stepper.setTargetPositionRelativeInSteps(stepsToMake);
 }
 
 int Motor::getReportedPos()
 {
-    int reportedPos = stepper2.getCurrentPositionInSteps();
+    int reportedPos = stepper.getCurrentPositionInSteps();
     if (reportedPos >= 0)
     {
-        return stepper2.getCurrentPositionInSteps() % SINGLE_ROTATION_STEPS;
+        return stepper.getCurrentPositionInSteps() % SINGLE_ROTATION_STEPS;
     }
     // 360 + (-450 % 360) = 270
-    return SINGLE_ROTATION_STEPS + (stepper2.getCurrentPositionInSteps() % SINGLE_ROTATION_STEPS);
+    return SINGLE_ROTATION_STEPS + (stepper.getCurrentPositionInSteps() % SINGLE_ROTATION_STEPS);
 }
 
 void Motor::calibratePosition()
 {
-    int sensorValue2 = analogRead(hallPin);
+    int sensorValue = analogRead(hallPin);
     int currentPos = getReportedPos();
+    
     if (calibrationBlockedUntilStep < currentPos)
     {
-        if (sensorValue2 < 500 && isClockwise)
+        bool isTriggered = hallFlipped
+                               ? sensorValue > (hallBaseline + 25)
+                               : sensorValue < (hallBaseline - 25);
+
+        if (isTriggered && isClockwise)
         {
             calibrationBlockedUntilStep = currentPos + 500;
 
             stepsOffset = currentPos - magnetPosition;
 
             // Serial.print("entered the zone at ");
-            // Serial.print(currentPos);
+            // Serial.println(currentPos);
             // Serial.print(" and blocking until ");
             // Serial.println(calibrationBlockedUntilStep);
         }
@@ -111,8 +119,14 @@ void Motor::calibratePosition()
     }
 }
 
+void Motor::setSpeed(int stepsPerSecond)
+{
+    stepper.setSpeedInStepsPerSecond(stepsPerSecond);
+    stepper.setAccelerationInStepsPerSecondPerSecond(stepsPerSecond / 2);
+}
+
 void Motor::loop()
 {
-    stepper2.processMovement();
+    stepper.processMovement();
     calibratePosition();
 }

@@ -1,6 +1,5 @@
 {
-    "sketch": "single_motor\\single_motor.ino",
-    "configuration": "cpu=atmega328",
+    "sketch": "clockclock.ino",
     "board": "arduino:avr:nano",
     "programmer": "arduino:arduinoisp",
     "port": "COM3"

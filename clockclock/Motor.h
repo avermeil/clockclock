@@ -8,13 +8,20 @@
 class Motor
 {
 public:
-  Motor(int _stepPin, int _dirPin, int _hallPin, bool _reverseDirection, int _magnetPosition);
+  Motor(int _stepPin,
+        int _dirPin,
+        int _hallPin,
+        bool _reverseDirection,
+        int _magnetPosition,
+        int _magnetBaseline,
+        bool _magnetFlipped);
   void init();
   void setTargetPos(int targetPos, int extraTurns, bool clockwise);
   int getReportedPos();
   void calibratePosition();
+  void setSpeed(int stepsPerSecond);
   void loop();
-  FlexyStepper stepper2;
+  FlexyStepper stepper;
   bool reverseDirection;
   int stepPin;
   int dirPin;
@@ -22,6 +29,8 @@ public:
   int stepsOffset;
   bool isClockwise;
   int magnetPosition;
+  int hallBaseline;
+  bool hallFlipped;
   int calibrationBlockedUntilStep;
 };
 
