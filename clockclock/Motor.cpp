@@ -13,6 +13,8 @@ Motor::Motor(
     int _hallBaseline,
     bool _hallFlipped)
 {
+    readyToInit = false;
+    initialised = false;
     stepsOffset = 0;
     isClockwise = true;
     magnetPosition = 0;
@@ -24,11 +26,12 @@ Motor::Motor(
     hallFlipped = _hallFlipped;
     hallBaseline = _hallBaseline;
     stepper.connectToPins(stepPin, dirPin, !reverseDirection);
-    setSpeed(500);
+    setSpeed(3000);
 }
 
 void Motor::init()
 {
+    // setSpeed(3000);
     stepper.setTargetPositionRelativeInSteps(SINGLE_ROTATION_STEPS * 1);
 
     while (!stepper.motionComplete())
@@ -36,6 +39,9 @@ void Motor::init()
         stepper.processMovement();
         calibratePosition();
     }
+    setSpeed(1000);
+
+    initialised = true;
 
     setTargetPos(0, 0, true);
 }
@@ -51,32 +57,35 @@ void Motor::setTargetPos(int targetPos, int extraTurns, bool clockwise)
 
     if (currentPos < targetPos)
     {
-        stepsToMake = targetPos - currentPos + extraSteps;
+        stepsToMake = targetPos - currentPos;
     }
     else if (currentPos > targetPos)
     {
-        stepsToMake = SINGLE_ROTATION_STEPS + targetPos - currentPos + extraSteps;
+        stepsToMake = SINGLE_ROTATION_STEPS + targetPos - currentPos;
     }
+
+    stepsToMake += extraSteps;
 
     if (!clockwise)
     {
         stepsToMake = stepsToMake - SINGLE_ROTATION_STEPS - (extraSteps * 2);
     }
 
-    // Serial.print("clockwise: ");
+    // Serial.print(F("clockwise: "));
     // Serial.println(clockwise);
-    // Serial.print("targetPos: ");
+    // Serial.print(F("targetPos: "));
     // Serial.println(targetPos);
-    // Serial.print("stepsOffset: ");
+    // Serial.print(F("stepsOffset: "));
     // Serial.println(stepsOffset);
-    // Serial.print("reportedPos: ");
+    // Serial.print(F("reportedPos: "));
     // Serial.println(reportedPos);
-    // Serial.print("currentPos: ");
+    // Serial.print(F("currentPos: "));
     // Serial.println(currentPos);
-    // Serial.print("stepsToMake: ");
+    // Serial.print(F("stepsToMake: "));
     // Serial.println(stepsToMake);
-    // Serial.print("magnetPosition: ");
+    // Serial.print(F("magnetPosition: "));
     // Serial.println(magnetPosition);
+
     stepper.setTargetPositionRelativeInSteps(stepsToMake);
 }
 
@@ -99,10 +108,11 @@ int Motor::normalisePosition(int reported)
 void Motor::calibratePosition()
 {
     int sensorValue = analogRead(hallPin);
-    int currentPos = getReportedPos();
+    long rawPos = stepper.getCurrentPositionInSteps();
+
     // Serial.println(sensorValue);
 
-    if (calibrationBlockedUntilStep < currentPos)
+    if (calibrationBlockedUntilStep < rawPos)
     {
         bool isTriggered = hallFlipped
                                ? sensorValue > (hallBaseline + 25)
@@ -110,8 +120,8 @@ void Motor::calibratePosition()
 
         if (isTriggered && isClockwise)
         {
-            calibrationBlockedUntilStep = currentPos + 500;
-
+            calibrationBlockedUntilStep = rawPos + 500;
+            int currentPos = getReportedPos();
             stepsOffset = currentPos - magnetPosition;
 
             Serial.print(F("entered the zone, magnetPos is "));
@@ -137,5 +147,5 @@ void Motor::setSpeed(int stepsPerSecond)
 void Motor::loop()
 {
     stepper.processMovement();
-    calibratePosition();
+    // calibratePosition();
 }

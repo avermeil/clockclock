@@ -22,6 +22,8 @@ public:
   void setSpeed(int stepsPerSecond);
   void loop();
   FlexyStepper stepper;
+  bool readyToInit;
+  bool initialised;
   bool reverseDirection;
   int stepPin;
   int dirPin;
@@ -31,7 +33,7 @@ public:
   int magnetPosition;
   int hallBaseline;
   bool hallFlipped;
-  int calibrationBlockedUntilStep;
+  long calibrationBlockedUntilStep;
 };
 
 #endif

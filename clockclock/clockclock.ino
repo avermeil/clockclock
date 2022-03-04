@@ -21,6 +21,7 @@ void setup()
     Wire.onReceive(receiveEvent);
 
     Serial.begin(115200);
+    Serial.println(F("done setup()"));
     // steppers[0].init();
     // steppers[1].init();
     // steppers[2].init();
@@ -29,6 +30,14 @@ void setup()
 
 void loop()
 {
+    for (byte i = 0; i < 4; i++)
+    {
+        if (!steppers[i].initialised && steppers[i].readyToInit)
+        {
+            steppers[i].init();
+        }
+    }
+
     steppers[0].loop();
     steppers[1].loop();
     steppers[2].loop();
@@ -64,7 +73,10 @@ void receiveEvent(int howMany)
         Serial.print(F("hallPos:"));
         Serial.println(magnetPos);
 
+        //  steppers[hand].setTargetPos(0, 1, true);
         steppers[hand].magnetPosition = magnetPos;
+
+        steppers[hand].readyToInit = true;
     }
 
     if (command == 1)
