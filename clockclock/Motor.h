@@ -14,10 +14,10 @@ public:
         bool _reverseDirection,
         int _magnetBaseline,
         bool _magnetFlipped);
-  void init();
-  void setTargetPos(int targetPos, int extraTurns, bool clockwise);
+  void init(int magnetPos);
+  void setTargetPos(int targetPos, int extraTurns, bool clockwise, int speed = 1000);
   int getReportedPos();
-  int normalisePosition(int reported);
+  int normalisePosition(long reported);
   void calibratePosition();
   void setSpeed(int stepsPerSecond);
   void loop();
@@ -33,7 +33,6 @@ public:
   int magnetPosition;
   int hallBaseline;
   bool hallFlipped;
-  long calibrationBlockedUntilStep;
 };
 
 #endif

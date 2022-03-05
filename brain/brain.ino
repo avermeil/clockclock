@@ -24,6 +24,8 @@
 
 auto timer = timer_create_default(); // create a timer with default settings
 
+void setHandPos(byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed = 1000);
+
 void setup()
 {
   Wire.begin(); // join i2c bus (address optional for master)
@@ -81,11 +83,11 @@ void onBuiltinLedChange()
     digitalWrite(13, HIGH);
     dance();
   }
-  // else
-  // {
-  //   digitalWrite(13, LOW);
-  //   reset();
-  // }
+  else
+  {
+    digitalWrite(13, LOW);
+    reset();
+  }
 }
 
 void onCalibrateChange()
@@ -118,10 +120,10 @@ bool goVertical()
 
 bool spin(void *)
 {
-  setHandPos(2, 0, 0, 3, true);
-  setHandPos(2, 1, 0, 3, false);
-  setHandPos(2, 2, 0, 3, true);
-  setHandPos(2, 3, 0, 3, false);
+  setHandPos(2, 0, 0, 2, true);
+  setHandPos(2, 1, 0, 2, true);
+  setHandPos(2, 2, 0, 2, true);
+  setHandPos(2, 3, 0, 2, true);
 }
 
 bool reset()
@@ -147,7 +149,7 @@ void setHallPos(byte board, byte hand, int hallPos)
   Wire.endTransmission();
 }
 
-void setHandPos(byte board, byte hand, int handPos, byte extraTurns, bool clockwise)
+void setHandPos(byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed)
 {
   Serial.println("sending new handPos");
   Wire.beginTransmission(board);
@@ -160,6 +162,9 @@ void setHandPos(byte board, byte hand, int handPos, byte extraTurns, bool clockw
 
   Wire.write(extraTurns);
   Wire.write(clockwise);
+
+  Wire.write(lowByte(speed));
+  Wire.write(highByte(speed));
 
   Wire.endTransmission();
 }

@@ -1,4 +1,6 @@
 #include <Wire.h>
+#include <EEPROM.h>
+#include <arduino-timer.h>
 #include "./Motor.h"
 
 // tester board:
@@ -21,23 +23,21 @@ void setup()
     Wire.onReceive(receiveEvent);
 
     Serial.begin(115200);
+
+    for (byte i = 0; i < 4; i++)
+    {
+        int savedCalibration = 0;
+        EEPROM.get(i * 2, savedCalibration);
+        Serial.print(F("saved calibration: "));
+        Serial.println(savedCalibration);
+        steppers[i].init(savedCalibration);
+    }
+
     Serial.println(F("done setup()"));
-    // steppers[0].init();
-    // steppers[1].init();
-    // steppers[2].init();
-    // steppers[3].init();
 }
 
 void loop()
 {
-    for (byte i = 0; i < 4; i++)
-    {
-        if (!steppers[i].initialised && steppers[i].readyToInit)
-        {
-            steppers[i].init();
-        }
-    }
-
     steppers[0].loop();
     steppers[1].loop();
     steppers[2].loop();
@@ -73,10 +73,9 @@ void receiveEvent(int howMany)
         Serial.print(F("hallPos:"));
         Serial.println(magnetPos);
 
-        //  steppers[hand].setTargetPos(0, 1, true);
-        steppers[hand].magnetPosition = magnetPos;
+        EEPROM.put(hand * 2, magnetPos);
 
-        steppers[hand].readyToInit = true;
+        steppers[hand].init(magnetPos);
     }
 
     if (command == 1)
@@ -85,14 +84,17 @@ void receiveEvent(int howMany)
         byte highPos = Wire.read();
         byte extraTurns = Wire.read();
         byte clockwise = Wire.read();
+        byte speedLowPos = Wire.read();
+        byte speedHighPos = Wire.read();
         int pos = bytesToInt(lowPos, highPos);
-        Serial.print(F("target Pos:"));
-        Serial.println(pos);
-        Serial.print(F("clockwise:"));
-        Serial.println(clockwise);
-        Serial.print(F("extraTurns:"));
-        Serial.println(extraTurns);
-        steppers[hand].setTargetPos(pos, extraTurns, clockwise);
+        int speed = bytesToInt(speedLowPos, speedHighPos);
+        // Serial.print(F("target Pos:"));
+        // Serial.println(pos);
+        // Serial.print(F("clockwise:"));
+        // Serial.println(clockwise);
+        // Serial.print(F("extraTurns:"));
+        // Serial.println(extraTurns);
+        steppers[hand].setTargetPos(pos, extraTurns, clockwise, speed);
     }
 }
 
