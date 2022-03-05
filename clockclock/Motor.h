@@ -12,9 +12,9 @@ public:
         int _dirPin,
         int _hallPin,
         bool _reverseDirection,
-        int _magnetBaseline,
-        bool _magnetFlipped);
-  void init(int magnetPos);
+        int hallBaseline,
+        bool _hallFlipped);
+  void init(int hallPos);
   void setTargetPos(int targetPos, int extraTurns, bool clockwise, int speed = 1000);
   int getReportedPos();
   int normalisePosition(long reported);
@@ -22,7 +22,6 @@ public:
   void setSpeed(int stepsPerSecond);
   void loop();
   FlexyStepper stepper;
-  bool readyToInit;
   bool initialised;
   bool reverseDirection;
   int stepPin;
@@ -30,7 +29,7 @@ public:
   int hallPin;
   int stepsOffset;
   bool isClockwise;
-  int magnetPosition;
+  int hallPosition;
   int hallBaseline;
   bool hallFlipped;
 };

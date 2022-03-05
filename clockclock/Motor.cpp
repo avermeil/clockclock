@@ -16,7 +16,7 @@ Motor::Motor(
     initialised = false;
     stepsOffset = 0;
     isClockwise = true;
-    magnetPosition = 0;
+    hallPosition = 0;
     stepPin = _stepPin;
     dirPin = _dirPin;
     hallPin = _hallPin;
@@ -27,15 +27,15 @@ Motor::Motor(
     setSpeed(1000);
 }
 
-void Motor::init(int magnetPos)
+void Motor::init(int hallPos)
 {
-    if (magnetPos == magnetPosition)
+    if (hallPos == hallPosition)
     {
         return;
     }
 
     initialised = false;
-    magnetPosition = magnetPos;
+    hallPosition = hallPos;
 
     setTargetPos(0, 3, true);
 }
@@ -80,8 +80,8 @@ void Motor::setTargetPos(int targetPos, int extraTurns, bool clockwise, int spee
     Serial.println(currentPos);
     Serial.print(F("stepsToMake: "));
     Serial.println(stepsToMake);
-    Serial.print(F("magnetPosition: "));
-    Serial.println(magnetPosition);
+    Serial.print(F("hallPosition: "));
+    Serial.println(hallPosition);
 
     stepper.setTargetPositionRelativeInSteps(stepsToMake);
 }
@@ -113,7 +113,7 @@ void Motor::calibratePosition()
     if (isTriggered && isClockwise)
     {
         int currentPos = getReportedPos();
-        stepsOffset = currentPos - magnetPosition;
+        stepsOffset = currentPos - hallPosition;
 
         Serial.print(F("entered the zone, stepsOffset is "));
         Serial.println(stepsOffset);

@@ -22,6 +22,9 @@
 #include <arduino-timer.h>
 #include "thingProperties.h"
 
+const bool CLOCKWISE = true;
+const bool COUNTERCLOCKWISE = false;
+
 auto timer = timer_create_default(); // create a timer with default settings
 
 void setHandPos(byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed = 1000);
@@ -97,10 +100,10 @@ void onCalibrateChange()
   Serial.println(builtin_led);
   if (calibrate)
   {
-    setHandPos(2, 0, 4319, 1, true);
-    setHandPos(2, 1, 4319, 1, true);
-    setHandPos(2, 2, 4319, 1, true);
-    setHandPos(2, 3, 4319, 1, true);
+    setHandPos(2, 0, 4319, 1, CLOCKWISE);
+    setHandPos(2, 1, 4319, 1, CLOCKWISE);
+    setHandPos(2, 2, 4319, 1, CLOCKWISE);
+    setHandPos(2, 3, 4319, 1, CLOCKWISE);
   }
 }
 
@@ -112,27 +115,27 @@ void dance()
 
 bool goVertical()
 {
-  setHandPos(2, 0, 0, 0, true);
-  setHandPos(2, 1, 2160, 0, false);
-  setHandPos(2, 2, 0, 0, true);
-  setHandPos(2, 3, 2160, 0, false);
+  setHandPos(2, 0, 0, 0, CLOCKWISE);
+  setHandPos(2, 1, 2160, 0, COUNTERCLOCKWISE);
+  setHandPos(2, 2, 0, 0, CLOCKWISE);
+  setHandPos(2, 3, 2160, 0, COUNTERCLOCKWISE);
 }
 
 bool spin(void *)
 {
-  setHandPos(2, 0, 0, 2, true);
-  setHandPos(2, 1, 0, 2, true);
-  setHandPos(2, 2, 0, 2, true);
-  setHandPos(2, 3, 0, 2, true);
+  setHandPos(2, 0, 0, 2, CLOCKWISE);
+  setHandPos(2, 1, 0, 2, CLOCKWISE);
+  setHandPos(2, 2, 0, 2, CLOCKWISE);
+  setHandPos(2, 3, 0, 2, CLOCKWISE);
 }
 
 bool reset()
 {
   timer.cancel();
-  setHandPos(2, 0, 0, 0, true);
-  setHandPos(2, 1, 0, 0, true);
-  setHandPos(2, 2, 0, 0, true);
-  setHandPos(2, 3, 0, 0, true);
+  setHandPos(2, 0, 0, 0, CLOCKWISE);
+  setHandPos(2, 1, 0, 0, CLOCKWISE);
+  setHandPos(2, 2, 0, 0, CLOCKWISE);
+  setHandPos(2, 3, 0, 0, CLOCKWISE);
 }
 
 void setHallPos(byte board, byte hand, int hallPos)

@@ -12,9 +12,9 @@
 // First prod board
 Motor steppers[4] = {
     Motor(5, 4, A3, false, 500, false),
-    Motor(7, 6, A2, true, 511, true),
+    Motor(7, 6, A2, true, 511, false),
     Motor(3, 2, A7, true, 522, false),
-    Motor(9, 8, A6, false, 524, true)};
+    Motor(9, 8, A6, false, 524, false)};
 
 void setup()
 {
@@ -43,15 +43,15 @@ void loop()
     steppers[2].loop();
     steppers[3].loop();
 
-    if (Serial.available() > 0)
-    {
-        String command = Serial.readStringUntil('\n');
-        int pos = command.substring(0, 1).toInt();
-        bool clockwise = !command.substring(1).toInt();
+    // if (Serial.available() > 0)
+    // {
+    //     String command = Serial.readStringUntil('\n');
+    //     int pos = command.substring(0, 1).toInt();
+    //     bool clockwise = !command.substring(1).toInt();
 
-        // stepper1.setTargetPos(pos * 540, 0, clockwise);
-        // stepper2.setTargetPos(pos * 540, 0, clockwise);
-    }
+    //     // stepper1.setTargetPos(pos * 540, 0, clockwise);
+    //     // stepper2.setTargetPos(pos * 540, 0, clockwise);
+    // }
 }
 
 void receiveEvent(int howMany)
@@ -67,15 +67,15 @@ void receiveEvent(int howMany)
 
     if (command == 0)
     {
-        byte lowMagnetPos = Wire.read();
-        byte highMagnetPos = Wire.read();
-        int magnetPos = bytesToInt(lowMagnetPos, highMagnetPos);
+        byte lowHallPos = Wire.read();
+        byte highHallPos = Wire.read();
+        int hallPos = bytesToInt(lowHallPos, highHallPos);
         Serial.print(F("hallPos:"));
-        Serial.println(magnetPos);
+        Serial.println(hallPos);
 
-        EEPROM.put(hand * 2, magnetPos);
+        EEPROM.put(hand * 2, hallPos);
 
-        steppers[hand].init(magnetPos);
+        steppers[hand].init(hallPos);
     }
 
     if (command == 1)
@@ -88,12 +88,6 @@ void receiveEvent(int howMany)
         byte speedHighPos = Wire.read();
         int pos = bytesToInt(lowPos, highPos);
         int speed = bytesToInt(speedLowPos, speedHighPos);
-        // Serial.print(F("target Pos:"));
-        // Serial.println(pos);
-        // Serial.print(F("clockwise:"));
-        // Serial.println(clockwise);
-        // Serial.print(F("extraTurns:"));
-        // Serial.println(extraTurns);
         steppers[hand].setTargetPos(pos, extraTurns, clockwise, speed);
     }
 }
