@@ -118,7 +118,7 @@ void Motor::calibratePosition()
         Serial.print(F("entered the zone, stepsOffset is "));
         Serial.println(stepsOffset);
         initialised = true;
-        setTargetPos(0, 0, true);
+        setTargetPos(0, 0, false); // set to true for more accurate calibration?
     }
 }
 

@@ -9,12 +9,19 @@
 // Motor stepper3(3, 2, A2, false, 0);
 // Motor stepper4(8, 9, A2, false, 0);
 
-// First prod board
+// Board 1
+//Motor steppers[4] = {
+//    Motor(5, 4, A3, false, 500, false),
+//    Motor(7, 6, A2, true, 511, false),
+//    Motor(3, 2, A7, true, 522, false),
+//    Motor(9, 8, A6, false, 524, false)};
+
+// Board 2
 Motor steppers[4] = {
-    Motor(5, 4, A3, false, 500, false),
-    Motor(7, 6, A2, true, 511, false),
-    Motor(3, 2, A7, true, 522, false),
-    Motor(9, 8, A6, false, 524, false)};
+    Motor(5, 4, A3, false, 524, false),
+    Motor(7, 6, A2, true, 476, false),
+    Motor(3, 2, A7, true, 500, false),
+    Motor(9, 8, A6, false, 515, false)};
 
 void setup()
 {
