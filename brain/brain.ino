@@ -31,12 +31,34 @@ void setHandPos(byte board, byte hand, int handPos, byte extraTurns, bool clockw
 
 void setup()
 {
-  Wire.begin(); // join i2c bus (address optional for master)
-
   // Initialize serial and wait for port to open:
   Serial.begin(115200);
   // This delay gives the chance to wait for a Serial Monitor without blocking if none is found
   delay(1500);
+
+  Wire.begin(); // join i2c bus (address optional for master)
+
+  Serial.println("I2C scanner. Scanning ...");
+  byte count = 0;
+
+  for (byte i = 1; i < 120; i++)
+  {
+    Wire.beginTransmission(i);
+    if (Wire.endTransmission() == 0)
+    {
+      Serial.print("Found address: ");
+      Serial.print(i, DEC);
+      Serial.print(" (0x");
+      Serial.print(i, HEX);
+      Serial.println(")");
+      count++;
+    }         // end of good response
+    delay(5); // give devices time to recover
+  }           // end of for loop
+  Serial.println("Done.");
+  Serial.print("Found ");
+  Serial.print(count, DEC);
+  Serial.println(" device(s).");
 
   // Defined in thingProperties.h
   initProperties();
@@ -64,12 +86,6 @@ void loop()
   ArduinoCloud.update();
   // Your code here
   timer.tick(); // tick the timer
-}
-
-bool toggle_led(void *)
-{
-  builtin_led = !builtin_led;
-  return true; // keep timer active? true
 }
 
 /*
