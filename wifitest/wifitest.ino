@@ -10,6 +10,7 @@
  ***************************************************************************************************************************************/
 #include "arduino_secrets.h"
 #include "defines.h"
+#include <Wire.h>
 
 const char SSID[] = SECRET_SSID; // Network SSID (name)
 const char PASS[] = SECRET_PASS; // Network password (use for WPA, or use as key for WEP)
@@ -26,6 +27,7 @@ void setup()
     pinMode(13, OUTPUT);
     // Open serial communications and wait for port to open:
     Serial.begin(115200);
+    Wire.begin(); // join i2c bus (address optional for master)
     delay(2000);
 
     Serial.print(F("\nStarting HelloServer on "));
@@ -62,6 +64,7 @@ void setup()
     // server.begin();
 
     server.on(F("/"), handleRoot);
+    server.on(F("/sethall"), handleSetHall);
 
     server.on(F("/inline"), []()
               { 
@@ -91,6 +94,17 @@ void handleRoot()
     int hr = min / 60;
     int day = hr / 24;
 
+    Wire.requestFrom(2, 8);
+    while (Wire.available())
+    {                                // peripheral may send less than requested
+        byte lowByte = Wire.read();  // receive a byte as character
+        byte highByte = Wire.read(); // receive a byte as character
+        int pos = bytesToInt(lowByte, highByte);
+        Serial.println("Got positions..."); // print the character
+        Serial.print("pos: ");              // print the character
+        Serial.println(pos);                // print the character
+    }
+
     snprintf(temp, BUFFER_SIZE - 1,
              "<html>\
 <head>\
@@ -111,6 +125,13 @@ body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Col
     server.send(200, F("text/html"), temp);
 }
 
+void handleSetHall()
+{
+    setHallPos(server.arg(0).toInt(), server.arg(1).toInt(), server.arg(2).toInt());
+
+    server.send(404, F("text/plain"), "ok");
+}
+
 void handleNotFound()
 {
     String message = F("File Not Found\n\n");
@@ -129,4 +150,23 @@ void handleNotFound()
     }
 
     server.send(404, F("text/plain"), message);
+}
+
+int16_t bytesToInt(byte low, byte high)
+{
+    return ((high & 0xFF) << 8) | (low & 0xFF);
+}
+
+void setHallPos(byte board, byte hand, int hallPos)
+{
+    Serial.println("SENDING CALIBRATION DATA");
+    Wire.beginTransmission(board);
+
+    Wire.write(0); // command
+    Wire.write(hand);
+
+    Wire.write(lowByte(hallPos));
+    Wire.write(highByte(hallPos));
+
+    Wire.endTransmission();
 }

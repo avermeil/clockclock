@@ -66,22 +66,22 @@ void Motor::setTargetPos(int targetPos, int extraTurns, bool clockwise, int spee
         stepsToMake = stepsToMake - SINGLE_ROTATION_STEPS - (extraSteps * 2);
     }
 
-    Serial.println(F("===== called setTargetPos ====="));
+    // Serial.println(F("===== called setTargetPos ====="));
 
-    Serial.print(F("clockwise: "));
-    Serial.println(clockwise);
-    Serial.print(F("targetPos: "));
-    Serial.println(targetPos);
-    Serial.print(F("stepsOffset: "));
-    Serial.println(stepsOffset);
-    Serial.print(F("reportedPos: "));
-    Serial.println(reportedPos);
-    Serial.print(F("currentPos: "));
-    Serial.println(currentPos);
-    Serial.print(F("stepsToMake: "));
-    Serial.println(stepsToMake);
-    Serial.print(F("hallPosition: "));
-    Serial.println(hallPosition);
+    // Serial.print(F("clockwise: "));
+    // Serial.println(clockwise);
+    // Serial.print(F("targetPos: "));
+    // Serial.println(targetPos);
+    // Serial.print(F("stepsOffset: "));
+    // Serial.println(stepsOffset);
+    // Serial.print(F("reportedPos: "));
+    // Serial.println(reportedPos);
+    // Serial.print(F("currentPos: "));
+    // Serial.println(currentPos);
+    // Serial.print(F("stepsToMake: "));
+    // Serial.println(stepsToMake);
+    // Serial.print(F("hallPosition: "));
+    // Serial.println(hallPosition);
 
     stepper.setTargetPositionRelativeInSteps(stepsToMake);
 }
@@ -115,8 +115,8 @@ void Motor::calibratePosition()
         int currentPos = getReportedPos();
         stepsOffset = currentPos - hallPosition;
 
-        Serial.print(F("entered the zone, stepsOffset is "));
-        Serial.println(stepsOffset);
+        // Serial.print(F("entered the zone, stepsOffset is "));
+        // Serial.println(stepsOffset);
         initialised = true;
         setTargetPos(0, 0, false); // set to true for more accurate calibration?
     }

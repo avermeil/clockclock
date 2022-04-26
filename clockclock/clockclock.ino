@@ -10,24 +10,32 @@
 // Motor stepper4(8, 9, A2, false, 0);
 
 // Board 1
-//Motor steppers[4] = {
+// Motor steppers[4] = {
 //    Motor(5, 4, A3, false, 500, false),
 //    Motor(7, 6, A2, true, 511, false),
 //    Motor(3, 2, A7, true, 522, false),
 //    Motor(9, 8, A6, false, 524, false)};
 
-// Board 2
+// Board 1 pcb
 Motor steppers[4] = {
-    Motor(5, 4, A3, false, 524, false),
-    Motor(7, 6, A2, true, 476, false),
-    Motor(3, 2, A7, true, 500, false),
+    Motor(5, 4, A3, false, 504, false),
+    Motor(7, 6, A2, true, 495, false),
+    Motor(3, 2, A7, true, 510, false),
     Motor(9, 8, A6, false, 515, false)};
+
+// Board 2
+// Motor steppers[4] = {
+//     Motor(5, 4, A3, false, 524, false),
+//     Motor(7, 6, A2, true, 476, false),
+//     Motor(3, 2, A7, true, 500, false),
+//     Motor(9, 8, A6, false, 515, false)};
 
 void setup()
 {
     Wire.begin(2);
 
     Wire.onReceive(receiveEvent);
+    Wire.onRequest(requestEvent);
 
     Serial.begin(115200);
 
@@ -61,24 +69,36 @@ void loop()
     // }
 }
 
+void requestEvent()
+{
+    Wire.write(lowByte(steppers[0].hallPosition));
+    Wire.write(highByte(steppers[0].hallPosition));
+    Wire.write(lowByte(steppers[1].hallPosition));
+    Wire.write(highByte(steppers[1].hallPosition));
+    Wire.write(lowByte(steppers[2].hallPosition));
+    Wire.write(highByte(steppers[2].hallPosition));
+    Wire.write(lowByte(steppers[3].hallPosition));
+    Wire.write(highByte(steppers[3].hallPosition));
+}
+
 void receiveEvent(int howMany)
 {
     Serial.println(F("--------- NEW COMMAND:"));
 
     byte command = Wire.read();
     byte hand = Wire.read();
-    Serial.print(F("command:"));
-    Serial.println(command);
-    Serial.print(F("hand:"));
-    Serial.println(hand);
+    // Serial.print(F("command:"));
+    // Serial.println(command);
+    // Serial.print(F("hand:"));
+    // Serial.println(hand);
 
     if (command == 0)
     {
         byte lowHallPos = Wire.read();
         byte highHallPos = Wire.read();
         int hallPos = bytesToInt(lowHallPos, highHallPos);
-        Serial.print(F("hallPos:"));
-        Serial.println(hallPos);
+        // Serial.print(F("hallPos:"));
+        // Serial.println(hallPos);
 
         EEPROM.put(hand * 2, hallPos);
 
