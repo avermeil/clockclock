@@ -64,6 +64,8 @@ void setup()
     // server.begin();
 
     server.on(F("/"), handleRoot);
+    server.on(F("/probe"), handleProbe);
+    server.on(F("/gethall"), handleGetHall);
     server.on(F("/sethall"), handleSetHall);
 
     server.on(F("/inline"), []()
@@ -121,15 +123,61 @@ body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Col
 </body>\
 </html>",
              BOARD_NAME, BOARD_NAME, SHIELD_TYPE, day, hr, min % 60, sec % 60);
-
     server.send(200, F("text/html"), temp);
+}
+
+void handleGetHall()
+{
+    char temp[BUFFER_SIZE];
+
+    Wire.requestFrom(server.arg(0).toInt(), 8);
+
+    int pos1 = bytesToInt(Wire.read(), Wire.read());
+    int pos2 = bytesToInt(Wire.read(), Wire.read());
+    int pos3 = bytesToInt(Wire.read(), Wire.read());
+    int pos4 = bytesToInt(Wire.read(), Wire.read());
+
+    snprintf(temp, BUFFER_SIZE - 1,
+             "[%d,%d,%d,%d]",
+             pos1, pos2, pos3, pos4);
+
+    server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
+    server.send(200, F("text/html"), temp);
+}
+
+void handleProbe()
+{
+    byte count = 0;
+    String json = "[";
+    for (byte i = 1; i < 20; i++)
+    {
+        Wire.beginTransmission(i);
+        if (Wire.endTransmission() == 0)
+        {
+
+            json = json + String(i);
+
+            if (count != 0)
+            {
+                json = json + ",";
+            }
+            count++;
+        }         // end of good response
+        delay(5); // give devices time to recover
+    }             // end of for loop
+
+    json = json + "]";
+
+    server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
+    server.send(200, F("application/json"), json);
 }
 
 void handleSetHall()
 {
     setHallPos(server.arg(0).toInt(), server.arg(1).toInt(), server.arg(2).toInt());
 
-    server.send(404, F("text/plain"), "ok");
+    server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
+    server.send(200, F("application/json"), "{\"ok\":true}");
 }
 
 void handleNotFound()

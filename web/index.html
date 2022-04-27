@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>THE CLOCKENING</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/yegor256/tacit@gh-pages/tacit-css.min.css" />
+</head>
+
+<body>
+    <section>
+        <header>
+            <h1 style="margin-top:32px">THE CLOCKENING</h1>
+        </header>
+        <article>
+
+            <p><b>Attached Boards</b> <span id="boardCount"></span>: <span id="boards">unknown</span></p>
+
+            <form id="setupForm" action="javascript:getCalibrationData()">
+                <fieldset>
+                    <label for="ip">IP address:</label>
+                    <input type="text" name="ip" value="192.168.1.112" />
+                    <button type="button" onclick="javascript:probe()">Probe attached boards</button>
+
+                    <label for="board">Board</label>
+                    <input type="number" name="board" min=0 max=100 value="1" />
+                    <button type="submit">Get Data</button>
+                </fieldset>
+
+            </form>
+            <form id="calibrationForm">
+                <fieldset>
+                    <h4>Hand 1</h4>
+                    <label for="ip">Hall Sensor Position</label>
+                    <input name="hall1" type="number" min=0 max=4319 />
+                    <button onclick="javascript:setCalibrationData('hall1')" type="button">Calibrate</button>
+
+                    <label for="ip">Hand Position</label>
+                    <input type="number" min=0 max=4319 />
+
+                    <button onclick="javascript:setHandPosition()" type="button">Set Position</button>
+                    <br />
+                    <button onclick="javascript:getCalibrationData()" type="button">&nwarr;</button>
+                    <button onclick="javascript:getCalibrationData()" type="button">&uarr;</button>
+                    <button onclick="javascript:getCalibrationData()" type="button">&nearr;</button>
+                    <br />
+                    <button onclick="javascript:getCalibrationData()" type="button">&larr;</button>
+                    <button onclick="javascript:getCalibrationData()" type="button">&orarr;</button>
+                    <button onclick="javascript:getCalibrationData()" type="button">&rarr;</button>
+                    <br />
+                    <button onclick="javascript:getCalibrationData()" type="button">&swarr;</button>
+                    <button onclick="javascript:getCalibrationData()" type="button">&darr;</button>
+                    <button onclick="javascript:getCalibrationData()" type="button">&searr;</button>
+                </fieldset>
+            </form>
+        </article>
+
+        <footer>
+            <nav>
+                <ul>
+                    <li>
+                        <small>Made by Axel Vermeil</a>. <a target="_blank"
+                                href="https://github.com/avermeil/clockclock/">View source.</a></small>
+                    </li>
+                </ul>
+            </nav>
+
+        </footer>
+    </section>
+
+    <script>
+
+        async function probe() {
+            const attachedDevices = await request('probe')
+
+            document.getElementById("boardCount").innerText = `(${attachedDevices.length})`
+            document.getElementById("boards").innerHTML = attachedDevices.map(b => `<code>${b}</code>`).join('')
+        }
+
+        async function getCalibrationData() {
+            const inputs = document.getElementById("setupForm").elements;
+
+            const board = inputs['board'].value
+
+            const hallPositions = await request('gethall?board=' + board)
+
+            const outputs = document.getElementById("calibrationForm").elements;
+
+            outputs['hall1'].value = hallPositions[0]
+        }
+
+        async function setCalibrationData(handName) {
+            const board = document.getElementById("setupForm").elements.board.value
+            const inputs = document.getElementById("calibrationForm").elements;
+
+            const hand = +handName[4] - 1 // yum
+            const pos = inputs[handName].value
+
+            await request(`sethall?board=${board}&hand=${hand}&pos=${pos}`)
+        }
+
+
+        async function request(path) {
+            const inputs = document.getElementById("setupForm").elements;
+
+            const ip = inputs['ip'].value
+
+            const response = await fetch(`http://${ip}/${path}`, {})
+
+            return response.json()
+        }
+
+    </script>
+</body>
+
+</html>
