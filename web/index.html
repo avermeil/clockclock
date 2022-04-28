@@ -39,17 +39,17 @@
 
                     <button onclick="javascript:setHandPosition()" type="button">Set Position</button>
                     <br />
-                    <button onclick="javascript:getCalibrationData()" type="button">&nwarr;</button>
-                    <button onclick="javascript:getCalibrationData()" type="button">&uarr;</button>
-                    <button onclick="javascript:getCalibrationData()" type="button">&nearr;</button>
+                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&nwarr;</button>
+                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&uarr;</button>
+                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&nearr;</button>
                     <br />
-                    <button onclick="javascript:getCalibrationData()" type="button">&larr;</button>
-                    <button onclick="javascript:getCalibrationData()" type="button">&orarr;</button>
-                    <button onclick="javascript:getCalibrationData()" type="button">&rarr;</button>
+                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&larr;</button>
+                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&orarr;</button>
+                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&rarr;</button>
                     <br />
-                    <button onclick="javascript:getCalibrationData()" type="button">&swarr;</button>
-                    <button onclick="javascript:getCalibrationData()" type="button">&darr;</button>
-                    <button onclick="javascript:getCalibrationData()" type="button">&searr;</button>
+                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&swarr;</button>
+                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&darr;</button>
+                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&searr;</button>
                 </fieldset>
             </form>
         </article>
@@ -109,7 +109,25 @@
             return response.json()
         }
 
+        probe()
+
     </script>
 </body>
 
 </html>
+<style>
+    .arrow {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 0.7rem;
+    }
+
+    body {
+        /* mustard yum */
+        background-color: rgb(255, 219, 88);
+    }
+
+    article {
+        border-radius: 10px;
+    }
+</style>
