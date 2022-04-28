@@ -17,39 +17,61 @@
 
             <form id="setupForm" action="javascript:getCalibrationData()">
                 <fieldset>
-                    <label for="ip">IP address:</label>
+                    <label for="ip">IP address</label>
                     <input type="text" name="ip" value="192.168.1.112" />
                     <button type="button" onclick="javascript:probe()">Probe attached boards</button>
-
+                    <label for="ip">Hand</label>
+                    <select name="hand">
+                        <option value="0" selected>Hand 1</option>
+                        <option value="1">Hand 2</option>
+                        <option value="2">Hand 3</option>
+                        <option value="3">Hand 4</option>
+                    </select>
                     <label for="board">Board</label>
-                    <input type="number" name="board" min=0 max=100 value="1" />
-                    <button type="submit">Get Data</button>
+                    <select name="board" id="boardinput"></select>
+
+                    <button type="submit">Get Calibration</button>
                 </fieldset>
 
             </form>
-            <form id="calibrationForm">
+            <form id="calibrationForm" action="javascript:setCalibrationData()">
                 <fieldset>
-                    <h4>Hand 1</h4>
-                    <label for="ip">Hall Sensor Position</label>
-                    <input name="hall1" type="number" min=0 max=4319 />
-                    <button onclick="javascript:setCalibrationData('hall1')" type="button">Calibrate</button>
+                    <h4>Hall Position</h4>
+                    <label for="hall">Hall Sensor Position</label>
+                    <input name="hall" type="number" min=0 max=4319 required />
+                    <button onclick="javascript:setCalibrationData()" type="submit">Calibrate</button>
+                </fieldset>
+            </form>
+            <form id="movementForm" action="javascript:setHandPosition()">
+                <h4>Hand Position</h4>
 
-                    <label for="ip">Hand Position</label>
-                    <input type="number" min=0 max=4319 />
+                Moves to
+                <input name="pos" type="number" min=0 max=4319 required />
+                at
+                <input name="speed" type="number" min=0 max=5000 value="1000" required /> speed with
+                <select name="extraturns">
+                    <option value="0">no extra turns</option>
+                    <option value="1">1 extra turn</option>
+                    <option value="2">2 extra turns</option>
+                </select>
+                <select name="clockwise">
+                    <option value="0">c-clockwise</option>
+                    <option value="1" selected>clockwise</option>
+                </select>
+                <br />
 
-                    <button onclick="javascript:setHandPosition()" type="button">Set Position</button>
-                    <br />
-                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&nwarr;</button>
-                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&uarr;</button>
-                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&nearr;</button>
-                    <br />
-                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&larr;</button>
-                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&orarr;</button>
-                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&rarr;</button>
-                    <br />
-                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&swarr;</button>
-                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&darr;</button>
-                    <button onclick="javascript:getCalibrationData()" class="arrow" type="button">&searr;</button>
+                <br />
+                <button onclick="javascript:preset(7)" class="arrow" type="button">&nwarr;</button>
+                <button onclick="javascript:preset(0)" class="arrow" type="button">&uarr;</button>
+                <button onclick="javascript:preset(1)" class="arrow" type="button">&nearr;</button>
+                <br />
+                <button onclick="javascript:preset(6)" class="arrow" type="button">&larr;</button>
+                <button class="arrow" type="submit">!</button>
+                <button onclick="javascript:preset(2)" class="arrow" type="button">&rarr;</button>
+                <br />
+                <button onclick="javascript:preset(5)" class="arrow" type="button">&swarr;</button>
+                <button onclick="javascript:preset(4)" class="arrow" type="button">&darr;</button>
+                <button onclick="javascript:preset(3)" class="arrow" type="button">&searr;</button>
                 </fieldset>
             </form>
         </article>
@@ -74,37 +96,53 @@
 
             document.getElementById("boardCount").innerText = `(${attachedDevices.length})`
             document.getElementById("boards").innerHTML = attachedDevices.map(b => `<code>${b}</code>`).join('')
+            document.getElementById("boardinput").innerHTML = attachedDevices.map(b => `<option value="${b}">Board #${b}</option>`).join('')
+
         }
 
         async function getCalibrationData() {
-            const inputs = document.getElementById("setupForm").elements;
+            const { board, hand } = document.getElementById("setupForm").elements;
 
-            const board = inputs['board'].value
+            const hallPositions = await request('gethall?board=' + board.value)
 
-            const hallPositions = await request('gethall?board=' + board)
+            const { hall } = document.getElementById("calibrationForm").elements;
 
-            const outputs = document.getElementById("calibrationForm").elements;
-
-            outputs['hall1'].value = hallPositions[0]
+            hall.value = hallPositions[+hand.value]
         }
 
-        async function setCalibrationData(handName) {
-            const board = document.getElementById("setupForm").elements.board.value
-            const inputs = document.getElementById("calibrationForm").elements;
+        async function setCalibrationData() {
+            const { board, hand } = document.getElementById("setupForm").elements
+            const { hall } = document.getElementById("calibrationForm").elements;
 
-            const hand = +handName[4] - 1 // yum
-            const pos = inputs[handName].value
-
-            await request(`sethall?board=${board}&hand=${hand}&pos=${pos}`)
+            await request(`sethall?board=${board.value}&hand=${hand.value}&pos=${hall.value}`)
         }
 
+        async function setHandPosition(handName) {
+            const setup = document.getElementById("setupForm").elements
+            const inputs = document.getElementById("movementForm").elements;
+
+            const board = setup.board.value
+            const hand = setup.hand.value
+            const pos = inputs.pos.value
+            const speed = inputs.speed.value
+            const extraturns = inputs.extraturns.value
+            const clockwise = inputs.clockwise.value
+
+            // byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed
+            await request(`sethand?board=${board}&hand=${hand}&pos=${pos}&extraturns=${extraturns}&clockwise=${clockwise}&speed=${speed}`)
+        }
+
+        async function preset(i) {
+            const inputs = document.getElementById("movementForm").elements
+            inputs.pos.value = i * (4320 / 8)
+            setHandPosition('hand1')
+        }
 
         async function request(path) {
-            const inputs = document.getElementById("setupForm").elements;
+            const { ip } = document.getElementById("setupForm").elements;
 
-            const ip = inputs['ip'].value
 
-            const response = await fetch(`http://${ip}/${path}`, {})
+            const response = await fetch(`http://${ip.value}/${path}`, {})
 
             return response.json()
         }

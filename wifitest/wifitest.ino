@@ -67,6 +67,7 @@ void setup()
     server.on(F("/probe"), handleProbe);
     server.on(F("/gethall"), handleGetHall);
     server.on(F("/sethall"), handleSetHall);
+    server.on(F("/sethand"), handleSetHand);
 
     server.on(F("/inline"), []()
               { 
@@ -180,6 +181,28 @@ void handleSetHall()
     server.send(200, F("application/json"), "{\"ok\":true}");
 }
 
+void handleSetHand()
+{
+    int count = 0;
+    for (int i = 0; i < (server.args() / 6); i++)
+    {
+        int plus_i = count * 6;
+
+        setHandPos(
+            server.arg(0 + plus_i).toInt(),
+            server.arg(1 + plus_i).toInt(),
+            server.arg(2 + plus_i).toInt(),
+            server.arg(3 + plus_i).toInt(),
+            server.arg(4 + plus_i).toInt(),
+            server.arg(5 + plus_i).toInt());
+
+        count++;
+    }
+
+    server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
+    server.send(200, F("application/json"), "{\"ok\":true}");
+}
+
 void handleNotFound()
 {
     String message = F("File Not Found\n\n");
@@ -215,6 +238,26 @@ void setHallPos(byte board, byte hand, int hallPos)
 
     Wire.write(lowByte(hallPos));
     Wire.write(highByte(hallPos));
+
+    Wire.endTransmission();
+}
+
+void setHandPos(byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed)
+{
+    Serial.println("sending new handPos");
+    Wire.beginTransmission(board);
+
+    Wire.write(1); // command
+    Wire.write(hand);
+
+    Wire.write(lowByte(handPos));
+    Wire.write(highByte(handPos));
+
+    Wire.write(extraTurns);
+    Wire.write(clockwise);
+
+    Wire.write(lowByte(speed));
+    Wire.write(highByte(speed));
 
     Wire.endTransmission();
 }
