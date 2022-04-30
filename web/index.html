@@ -39,7 +39,13 @@
                     <h4>Hall Position</h4>
                     <label for="hall">Hall Sensor Position</label>
                     <input name="hall" type="number" min=0 max=4319 required />
-                    <button onclick="javascript:setCalibrationData()" type="submit">Calibrate</button>
+
+                    <button type="submit" class="wait">Calibrate</button>
+
+                    <button onclick="javascript:calibratePlus(-10)" type="button" class="wait">-10</button>
+                    <button onclick="javascript:calibratePlus(-5)" type="button" class="wait">-5</button>
+                    <button onclick="javascript:calibratePlus(5)" type="button" class="wait">+5</button>
+                    <button onclick="javascript:calibratePlus(10)" type="button" class="wait">+10</button>
                 </fieldset>
             </form>
             <form id="movementForm" action="javascript:setHandPosition()">
@@ -95,7 +101,7 @@
             const attachedDevices = await request('probe')
 
             document.getElementById("boardCount").innerText = `(${attachedDevices.length})`
-            document.getElementById("boards").innerHTML = attachedDevices.map(b => `<code>${b}</code>`).join('')
+            document.getElementById("boards").innerHTML = attachedDevices.map(b => ` <code>${b}</code> `).join('')
             document.getElementById("boardinput").innerHTML = attachedDevices.map(b => `<option value="${b}">Board #${b}</option>`).join('')
 
         }
@@ -113,11 +119,31 @@
         async function setCalibrationData() {
             const { board, hand } = document.getElementById("setupForm").elements
             const { hall } = document.getElementById("calibrationForm").elements;
+            if (!hall.value) {
+                throw new Error('no calibration data')
+            }
+            const { pos } = document.getElementById("movementForm").elements;
+
+            pos.value = 0
 
             await request(`sethall?board=${board.value}&hand=${hand.value}&pos=${hall.value}`)
         }
 
-        async function setHandPosition(handName) {
+        async function calibratePlus(amount) {
+            const { hall } = document.getElementById("calibrationForm").elements;
+            const { pos, clockwise, extraturns } = document.getElementById("movementForm").elements;
+
+            hall.value = +hall.value - amount
+
+            pos.value = (4320 + (+pos.value + amount)) % 4320
+
+            extraturns.value = 0
+            clockwise.value = amount > 0 ? 1 : 0
+
+            await setHandPosition()
+        }
+
+        async function setHandPosition() {
             const setup = document.getElementById("setupForm").elements
             const inputs = document.getElementById("movementForm").elements;
 
@@ -141,10 +167,21 @@
         async function request(path) {
             const { ip } = document.getElementById("setupForm").elements;
 
+            const buttons = document.getElementsByClassName('wait')
+
+            for (const button of buttons) {
+                button.disabled = true
+            }
 
             const response = await fetch(`http://${ip.value}/${path}`, {})
 
-            return response.json()
+            const j = await response.json()
+
+            for (const button of buttons) {
+                button.disabled = false
+            }
+
+            return j
         }
 
         probe()

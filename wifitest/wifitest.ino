@@ -155,14 +155,13 @@ void handleProbe()
         Wire.beginTransmission(i);
         if (Wire.endTransmission() == 0)
         {
-
-            json = json + String(i);
-
             if (count != 0)
             {
                 json = json + ",";
             }
-            count++;
+            json = json + String(i);
+
+                        count++;
         }         // end of good response
         delay(5); // give devices time to recover
     }             // end of for loop

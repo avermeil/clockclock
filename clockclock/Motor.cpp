@@ -29,6 +29,15 @@ Motor::Motor(
 
 void Motor::init(int hallPos)
 {
+    unsigned long sens = 0;
+    int samples = 5;
+    for (int i = 0; i < samples; i++)
+    {
+        delay(10);
+        sens += analogRead(hallPin);
+    }
+    hallBaseline = round(sens / samples);
+
     if (hallPos == hallPosition)
     {
         return;

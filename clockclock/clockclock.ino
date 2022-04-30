@@ -30,9 +30,11 @@ Motor steppers[4] = {
 //     Motor(3, 2, A7, true, 500, false),
 //     Motor(9, 8, A6, false, 515, false)};
 
+int I2C_ADDRESS = 2;
+
 void setup()
 {
-    Wire.begin(2);
+    Wire.begin(I2C_ADDRESS);
 
     Wire.onReceive(receiveEvent);
     Wire.onRequest(requestEvent);
@@ -41,10 +43,16 @@ void setup()
 
     for (byte i = 0; i < 4; i++)
     {
+        int flashAddress = i * 2 // two bytes per int
         int savedCalibration = 0;
-        EEPROM.get(i * 2, savedCalibration);
+        EEPROM.get(flashAddress, savedCalibration);
         Serial.print(F("saved calibration: "));
         Serial.println(savedCalibration);
+        if (savedCalibration == -1)
+        {
+            savedCalibration = 1300; // set a reasonable default
+            EEPROM.put(flashAddress, savedCalibration);
+        }
         steppers[i].init(savedCalibration);
     }
 
@@ -83,7 +91,7 @@ void requestEvent()
 
 void receiveEvent(int howMany)
 {
-    Serial.println(F("--------- NEW COMMAND:"));
+    // Serial.println(F("--------- NEW COMMAND:"));
 
     byte command = Wire.read();
     byte hand = Wire.read();
