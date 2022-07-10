@@ -31,6 +31,8 @@
                     <select name="board" id="boardinput"></select>
 
                     <button type="submit">Get Calibration</button>
+                    <button type="button" onclick="javascript:wiggle()">Wiggle</button>
+
                 </fieldset>
 
             </form>
@@ -54,7 +56,7 @@
                 Moves to
                 <input name="pos" type="number" min=0 max=4319 required />
                 at
-                <input name="speed" type="number" min=0 max=5000 value="1000" required /> speed with
+                <input name="speed" type="number" min=0 max=5000 value="400" required /> speed with
                 <select name="extraturns">
                     <option value="0">no extra turns</option>
                     <option value="1">1 extra turn</option>
@@ -112,8 +114,10 @@
             const hallPositions = await request('gethall?board=' + board.value)
 
             const { hall } = document.getElementById("calibrationForm").elements;
+            const { pos } = document.getElementById("movementForm").elements;
 
             hall.value = hallPositions[+hand.value]
+            pos.value = 4320 * 0.75
         }
 
         async function setCalibrationData() {
@@ -124,7 +128,7 @@
             }
             const { pos } = document.getElementById("movementForm").elements;
 
-            pos.value = 0
+            pos.value = 4320 * 0.75
 
             await request(`sethall?board=${board.value}&hand=${hand.value}&pos=${hall.value}`)
         }
@@ -158,6 +162,41 @@
             await request(`sethand?board=${board}&hand=${hand}&pos=${pos}&extraturns=${extraturns}&clockwise=${clockwise}&speed=${speed}`)
         }
 
+        async function wiggle() {
+            const setup = document.getElementById("setupForm").elements
+            const inputs = document.getElementById("movementForm").elements;
+
+            const board = setup.board.value
+            const pos = inputs.pos.value
+            const speed = inputs.speed.value
+
+
+
+
+            for (const i of [1, 2, 3, 4]) {
+                // await request(`sethand?board=${board}&hand=${i - 1}&pos=${pos}&extraturns=${1}&clockwise=${clockwise}&speed=${speed}`)
+
+                for (const j of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
+                    // for (const j of [1, 2, 3,]) {
+                    // for (const j of [4, 5, 6,]) {
+                    // for (const j of [7, 8, 9,]) {
+                    //for (const j of [10, 11, 12]) {
+                    // for (const j of [7, 8, 9, 10, 11, 12]) {
+                    // for (const j of [1, 2, 3, 4, 5, 6]) {
+                    // const localSpeed = speed
+                    const localSpeed = +speed + Math.floor(Math.random() * 200)
+                    const clockwise = Math.random() > 0.5 ? 1 : 0
+                    const extraTurns = clockwise ? 6 : 5
+
+                    await request(`sethand?board=${j}&hand=${i - 1}&pos=${pos}&extraturns=${extraTurns}&clockwise=${clockwise}&speed=${localSpeed}`)
+                }
+            }
+
+            //loud boards: 2, 10, 12
+
+            // byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed
+        }
+
         async function preset(i) {
             const inputs = document.getElementById("movementForm").elements
             inputs.pos.value = i * (4320 / 8)
@@ -181,11 +220,20 @@
                 button.disabled = false
             }
 
+            console.log(j)
+
             return j
         }
 
         probe()
 
+        async function blah() {
+            while (1) {
+                await getCalibrationData()
+                await new Promise((resolve) => setTimeout(resolve, 500))
+            }
+        }
+        // blah()
     </script>
 </body>
 

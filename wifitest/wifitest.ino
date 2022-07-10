@@ -11,6 +11,8 @@
 #include "arduino_secrets.h"
 #include "defines.h"
 #include <Wire.h>
+#include <NTPClient.h>
+// #include <WiFiUdp.h>
 
 const char SSID[] = SECRET_SSID; // Network SSID (name)
 const char PASS[] = SECRET_PASS; // Network password (use for WPA, or use as key for WEP)
@@ -20,6 +22,13 @@ int reqCount = 0;            // number of requests received
 int led = 13;
 #define BUFFER_SIZE 512
 
+WiFiUDP ntpUDP;
+
+// By default 'pool.ntp.org' is used with 60 seconds update interval and
+// no offset
+const long utcOffsetInSeconds = 3600;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
+
 WiFiWebServer server(80);
 
 void setup()
@@ -28,6 +37,7 @@ void setup()
     // Open serial communications and wait for port to open:
     Serial.begin(115200);
     Wire.begin(); // join i2c bus (address optional for master)
+    // Wire.setClock(10000L);
     delay(2000);
 
     Serial.print(F("\nStarting HelloServer on "));
@@ -81,12 +91,32 @@ void setup()
     Serial.print(F("HTTP server started @ "));
     Serial.println(WiFi.localIP());
 
+    timeClient.begin();
+
     digitalWrite(led, 1);
 }
 
 void loop()
 {
     server.handleClient();
+    status = WiFi.status();
+
+    timeClient.update();
+
+    // Serial.println(timeClient.getFormattedTime());
+    // Serial.println(timeClient.getSeconds());
+
+    // if (status == WL_CONNECTED)
+    // {
+
+    //     Serial.println("connected");
+
+    //     // Connect to WPA/WPA2 network
+    // }
+    // else
+    // {
+    //     Serial.println("not connected");
+    // }
 }
 
 void handleRoot()
@@ -161,7 +191,7 @@ void handleProbe()
             }
             json = json + String(i);
 
-                        count++;
+            count++;
         }         // end of good response
         delay(5); // give devices time to recover
     }             // end of for loop

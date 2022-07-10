@@ -4,6 +4,7 @@
 #include "FlexyStepperLocal.h"
 
 const long SINGLE_ROTATION_STEPS = 4320;
+const byte HALL_SENSITIVITY = 5; // smaller is more sensitive
 
 Motor::Motor(
     int _stepPin,
@@ -116,8 +117,8 @@ void Motor::calibratePosition()
     int sensorValue = analogRead(hallPin);
 
     bool isTriggered = hallFlipped
-                           ? sensorValue > (hallBaseline + 25)
-                           : sensorValue < (hallBaseline - 25);
+                           ? sensorValue > (hallBaseline + HALL_SENSITIVITY)
+                           : sensorValue < (hallBaseline - HALL_SENSITIVITY);
 
     if (isTriggered && isClockwise)
     {
@@ -127,7 +128,7 @@ void Motor::calibratePosition()
         // Serial.print(F("entered the zone, stepsOffset is "));
         // Serial.println(stepsOffset);
         initialised = true;
-        setTargetPos(0, 0, false); // set to true for more accurate calibration?
+        setTargetPos(SINGLE_ROTATION_STEPS * 0.75, 0, false, 2000);
     }
 }
 

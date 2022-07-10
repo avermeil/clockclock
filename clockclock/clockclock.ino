@@ -30,10 +30,14 @@ Motor steppers[4] = {
 //     Motor(3, 2, A7, true, 500, false),
 //     Motor(9, 8, A6, false, 515, false)};
 
-int I2C_ADDRESS = 2;
+int I2C_ADDRESS = 4;
 
 void setup()
 {
+    CLKPR = 0x80; // (1000 0000) enable change in clock frequency
+    CLKPR = 0x01; // (0000 0001) use clock division factor 2 to reduce the frequency from 16 MHz to 8 MHz
+
+    randomSeed(analogRead(0));
     Wire.begin(I2C_ADDRESS);
 
     Wire.onReceive(receiveEvent);
@@ -41,9 +45,13 @@ void setup()
 
     Serial.begin(115200);
 
+    // delay for random amount of time
+    int randomNum = random(500);
+    delay(randomNum);
+
     for (byte i = 0; i < 4; i++)
     {
-        int flashAddress = i * 2 // two bytes per int
+        int flashAddress = i * 2; // two bytes per int
         int savedCalibration = 0;
         EEPROM.get(flashAddress, savedCalibration);
         Serial.print(F("saved calibration: "));
@@ -53,6 +61,7 @@ void setup()
             savedCalibration = 1300; // set a reasonable default
             EEPROM.put(flashAddress, savedCalibration);
         }
+
         steppers[i].init(savedCalibration);
     }
 
