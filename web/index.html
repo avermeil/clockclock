@@ -32,6 +32,7 @@
 
                     <button type="submit">Get Calibration</button>
                     <button type="button" onclick="javascript:wiggle()">Wiggle</button>
+                    <button type="button" onclick="javascript:test()">Test</button>
 
                 </fieldset>
 
@@ -195,6 +196,10 @@
             //loud boards: 2, 10, 12
 
             // byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed
+        }
+
+        async function test() {
+            await request(`test`)
         }
 
         async function preset(i) {

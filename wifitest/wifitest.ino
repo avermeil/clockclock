@@ -12,6 +12,8 @@
 #include "defines.h"
 #include <Wire.h>
 #include <NTPClient.h>
+#include <arduino-timer.h>
+
 // #include <WiFiUdp.h>
 
 const char SSID[] = SECRET_SSID; // Network SSID (name)
@@ -30,6 +32,20 @@ const long utcOffsetInSeconds = 3600;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
 WiFiWebServer server(80);
+
+const int DEFAULT_SPEED = 500;
+
+const int SINGLE_ROTATION_STEPS = 4320;
+const int bottom = 0;
+const int bottom_left = SINGLE_ROTATION_STEPS * 1 / 8;
+const int left = SINGLE_ROTATION_STEPS * 2 / 8;
+const int top_left = SINGLE_ROTATION_STEPS * 3 / 8;
+const int top = SINGLE_ROTATION_STEPS * 4 / 8;
+const int top_right = SINGLE_ROTATION_STEPS * 5 / 8;
+const int right = SINGLE_ROTATION_STEPS * 6 / 8;
+const int bottom_right = SINGLE_ROTATION_STEPS * 7 / 8;
+
+auto timer = timer_create_default(); // create a timer with default settings
 
 void setup()
 {
@@ -78,6 +94,7 @@ void setup()
     server.on(F("/gethall"), handleGetHall);
     server.on(F("/sethall"), handleSetHall);
     server.on(F("/sethand"), handleSetHand);
+    server.on(F("/test"), handleTest);
 
     server.on(F("/inline"), []()
               { 
@@ -103,20 +120,22 @@ void loop()
 
     timeClient.update();
 
+    timer.tick(); // tick the timer
+
     // Serial.println(timeClient.getFormattedTime());
     // Serial.println(timeClient.getSeconds());
 
-    // if (status == WL_CONNECTED)
-    // {
+    if (status == WL_CONNECTED)
+    {
 
-    //     Serial.println("connected");
+        // Serial.println("connected");
 
-    //     // Connect to WPA/WPA2 network
-    // }
-    // else
-    // {
-    //     Serial.println("not connected");
-    // }
+        // Connect to WPA/WPA2 network
+    }
+    else
+    {
+        Serial.println("not connected");
+    }
 }
 
 void handleRoot()
@@ -232,6 +251,16 @@ void handleSetHand()
     server.send(200, F("application/json"), "{\"ok\":true}");
 }
 
+void handleTest()
+{
+    Serial.println("doing test...");
+
+    setUpWave();
+
+    server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
+    server.send(200, F("application/json"), "{\"ok\":true}");
+}
+
 void handleNotFound()
 {
     String message = F("File Not Found\n\n");
@@ -259,7 +288,7 @@ int16_t bytesToInt(byte low, byte high)
 
 void setHallPos(byte board, byte hand, int hallPos)
 {
-    Serial.println("SENDING CALIBRATION DATA");
+    // Serial.println("SENDING CALIBRATION DATA");
     Wire.beginTransmission(board);
 
     Wire.write(0); // command
@@ -273,7 +302,7 @@ void setHallPos(byte board, byte hand, int hallPos)
 
 void setHandPos(byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed)
 {
-    Serial.println("sending new handPos");
+    Serial.println((String) "sending new handPos... board:" + board + ", hand:" + hand + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", clockwise:" + clockwise + ", speed:" + speed);
     Wire.beginTransmission(board);
 
     Wire.write(1); // command
@@ -290,3 +319,55 @@ void setHandPos(byte board, byte hand, int handPos, byte extraTurns, bool clockw
 
     Wire.endTransmission();
 }
+
+void setUpWave()
+{
+    for (byte board = 1; board <= 12; board++)
+    {
+        for (byte hand = 0; hand < 4; hand++)
+        {
+            if (hand == 0 || hand == 3)
+            {
+                setHandPos(board, hand, bottom_left, 0, 1, DEFAULT_SPEED);
+            }
+            else
+            {
+                setHandPos(board, hand, top_right, 0, 1, DEFAULT_SPEED);
+            }
+        }
+    }
+
+    // set up timer for setUpSpin in 5s
+}
+
+bool setUpSpin(void *)
+{
+    timer.in(4 * 1000, spin);
+
+    setHandPos(board, hand, bottom, 5, 1, DEFAULT_SPEED);
+
+    for (byte board = 1; board <= 12; board++)
+    {
+        for (byte hand = 0; hand < 4; hand++)
+        {
+            // set up timer with offsets
+        }
+    }
+}
+
+bool spin(void *)
+{
+    setHandPos(board, hand, bottom, 5, 1, DEFAULT_SPEED);
+
+    for (byte board = 1; board <= 12; board++)
+    {
+        for (byte hand = 0; hand < 4; hand++)
+        {
+        }
+    }
+}
+
+/*
+    Todo:
+    - program a thing such that it _ends_ at a defined time (dynamic acceleration)
+*/
