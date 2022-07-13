@@ -30,7 +30,7 @@ Motor steppers[4] = {
 //     Motor(3, 2, A7, true, 500, false),
 //     Motor(9, 8, A6, false, 515, false)};
 
-int I2C_ADDRESS = 4;
+int I2C_ADDRESS = 1;
 
 void setup()
 {

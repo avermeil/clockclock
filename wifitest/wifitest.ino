@@ -284,16 +284,13 @@ void handleGetHall()
 {
     char temp[BUFFER_SIZE];
 
-    Wire.requestFrom(server.arg(0).toInt(), 8);
+    int hand = server.arg(0).toInt();
 
-    int pos1 = bytesToInt(Wire.read(), Wire.read());
-    int pos2 = bytesToInt(Wire.read(), Wire.read());
-    int pos3 = bytesToInt(Wire.read(), Wire.read());
-    int pos4 = bytesToInt(Wire.read(), Wire.read());
+    hands[hand].refreshData();
 
     snprintf(temp, BUFFER_SIZE - 1,
-             "[%d,%d,%d,%d]",
-             pos1, pos2, pos3, pos4);
+             "[%d,%d,%d]",
+             hands[hand].calibration, hands[hand].position, hands[hand].isClockwise);
 
     server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
     server.send(200, F("text/html"), temp);

@@ -20,19 +20,22 @@
                     <label for="ip">IP address</label>
                     <input type="text" name="ip" value="192.168.1.112" />
                     <button type="button" onclick="javascript:probe()">Probe attached boards</button>
+                    <button type="button" onclick="javascript:wiggle()">Wiggle</button>
+                    <button type="button" onclick="javascript:test()">Test</button>
                     <label for="ip">Hand</label>
                     <select name="hand">
                         <option value="0" selected>Hand 1</option>
                         <option value="1">Hand 2</option>
                         <option value="2">Hand 3</option>
                         <option value="3">Hand 4</option>
+                        <option value="4">Hand 5</option>
+                        <option value="5">Hand 6</option>
+                        <option value="6">Hand 7</option>
+                        <option value="7">Hand 8</option>
                     </select>
-                    <label for="board">Board</label>
-                    <select name="board" id="boardinput"></select>
 
                     <button type="submit">Get Calibration</button>
-                    <button type="button" onclick="javascript:wiggle()">Wiggle</button>
-                    <button type="button" onclick="javascript:test()">Test</button>
+
 
                 </fieldset>
 
