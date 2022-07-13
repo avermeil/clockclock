@@ -277,17 +277,17 @@ void setUpWave()
 bool setUpSpin(void *)
 {
 
-    for (byte j = 0; j < 8; j++)
+    for (byte j = 7; j >= 0; j--)
     {
         Serial.println((String) "column:" + j);
 
         for (byte i = 0; i < 6; i++)
         {
             byte hand = (6 * j) + i;
-            hands[hand].moveTo(bottom, 5, 1, DEFAULT_SPEED);
+            hands[hand].moveTo(bottom, 5, 1, 1000);
             Serial.println((String) "Moving hand:" + hand);
         }
-        delay(200);
+        delay(300);
     }
 }
 
