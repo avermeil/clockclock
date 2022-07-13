@@ -18,10 +18,10 @@
 
 // Board 1 pcb
 Motor steppers[4] = {
-    Motor(5, 4, A3, false, 504, false),
-    Motor(7, 6, A2, true, 495, false),
     Motor(3, 2, A7, true, 510, false),
-    Motor(9, 8, A6, false, 515, false)};
+    Motor(9, 8, A6, false, 515, false),
+    Motor(5, 4, A3, false, 504, false),
+    Motor(7, 6, A2, true, 495, false)};
 
 // Board 2
 // Motor steppers[4] = {
