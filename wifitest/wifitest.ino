@@ -54,7 +54,7 @@ const int bottom_right = SINGLE_ROTATION_STEPS * 7 / 8;
 
 auto timer = timer_create_default(); // create a timer with default settings
 
-const byte HAND_COUNT = 8;
+const byte HAND_COUNT = 48;
 Hand hands[HAND_COUNT] = {
     Hand(1, 0),
     Hand(1, 1),
@@ -63,7 +63,47 @@ Hand hands[HAND_COUNT] = {
     Hand(2, 0),
     Hand(2, 1),
     Hand(2, 2),
-    Hand(2, 3)};
+    Hand(2, 3),
+    Hand(3, 0),
+    Hand(3, 1),
+    Hand(3, 2),
+    Hand(3, 3),
+    Hand(4, 0),
+    Hand(4, 1),
+    Hand(4, 2),
+    Hand(4, 3),
+    Hand(5, 0),
+    Hand(5, 1),
+    Hand(5, 2),
+    Hand(5, 3),
+    Hand(6, 0),
+    Hand(6, 1),
+    Hand(6, 2),
+    Hand(6, 3),
+    Hand(7, 0),
+    Hand(7, 1),
+    Hand(7, 2),
+    Hand(7, 3),
+    Hand(8, 0),
+    Hand(8, 1),
+    Hand(8, 2),
+    Hand(8, 3),
+    Hand(9, 0),
+    Hand(9, 1),
+    Hand(9, 2),
+    Hand(9, 3),
+    Hand(10, 0),
+    Hand(10, 1),
+    Hand(10, 2),
+    Hand(10, 3),
+    Hand(11, 0),
+    Hand(11, 1),
+    Hand(11, 2),
+    Hand(11, 3),
+    Hand(12, 0),
+    Hand(12, 1),
+    Hand(12, 2),
+    Hand(12, 3)};
 
 void setup()
 {
@@ -214,18 +254,33 @@ void setUpWave()
     }
 
     // set up timer for setUpSpin in 5s
-    timer.in(5 * 1000, setUpSpin);
+    timer.in(8 * 1000, setUpSpin);
 }
 
 bool setUpSpin(void *)
 {
     // timer.in(4 * 1000, spin);
 
-    for (byte hand = 0; hand < HAND_COUNT; hand++)
+    byte column[] = {0, 4, 8};
+
+    for (byte j = 0; j < 8; j++)
     {
-        hands[hand].moveTo(bottom, 5, 1, DEFAULT_SPEED);
-        delay(1000);
+        for (byte i = 0; i < 3; i++)
+        {
+            byte hand = column[i] + (j * 6);
+            hands[hand].moveTo(bottom, 5, 1, DEFAULT_SPEED);
+            hands[hand + 1].moveTo(bottom, 5, 1, DEFAULT_SPEED);
+            Serial.println((String) "Moving hand:" + hand + " and " + hand + 1);
+        }
+        delay(2000);
     }
+
+    // for (byte hand = 0; hand < HAND_COUNT; hand++)
+    // {
+    //     // 0, 1, 4, 5, 8, 9,
+    //     hands[hand].moveTo(bottom, 5, 1, DEFAULT_SPEED);
+    //     delay(1000);
+    // }
 }
 
 // bool spin(void *)
