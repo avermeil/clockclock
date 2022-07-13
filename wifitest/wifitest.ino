@@ -13,28 +13,35 @@
 #include <Wire.h>
 #include <NTPClient.h>
 #include <arduino-timer.h>
+#include "./hand.h"
 
-// #include <WiFiUdp.h>
+/*
+    Wifi stuff
+*/
 
-const char SSID[] = SECRET_SSID; // Network SSID (name)
-const char PASS[] = SECRET_PASS; // Network password (use for WPA, or use as key for WEP)
+#define BUFFER_SIZE 512
+const char SSID[] = SECRET_SSID;
+const char PASS[] = SECRET_PASS;
 
 int status = WL_IDLE_STATUS; // the Wifi radio's status
-int reqCount = 0;            // number of requests received
-int led = 13;
-#define BUFFER_SIZE 512
+int INTERNAL_LED = 13;
 
 WiFiUDP ntpUDP;
 
-// By default 'pool.ntp.org' is used with 60 seconds update interval and
-// no offset
+WiFiWebServer server(80);
+
+/*
+    NTP stuff
+*/
+
 const long utcOffsetInSeconds = 3600;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
-WiFiWebServer server(80);
+/*
+    Clock stuff
+*/
 
 const int DEFAULT_SPEED = 500;
-
 const int SINGLE_ROTATION_STEPS = 4320;
 const int bottom = 0;
 const int bottom_left = SINGLE_ROTATION_STEPS * 1 / 8;
@@ -47,13 +54,26 @@ const int bottom_right = SINGLE_ROTATION_STEPS * 7 / 8;
 
 auto timer = timer_create_default(); // create a timer with default settings
 
+const byte HAND_COUNT = 8;
+Hand hands[HAND_COUNT] = {
+    Hand(1, 0),
+    Hand(1, 1),
+    Hand(1, 2),
+    Hand(1, 3),
+    Hand(2, 0),
+    Hand(2, 1),
+    Hand(2, 2),
+    Hand(2, 3)};
+
 void setup()
 {
     pinMode(13, OUTPUT);
-    // Open serial communications and wait for port to open:
+
     Serial.begin(115200);
-    Wire.begin(); // join i2c bus (address optional for master)
-    // Wire.setClock(10000L);
+    Wire.begin();
+
+    // Wire.setClock(10000L); // doesn't work?
+
     delay(2000);
 
     Serial.print(F("\nStarting HelloServer on "));
@@ -76,18 +96,19 @@ void setup()
 
     status = WiFi.begin(SECRET_SSID, SECRET_PASS);
 
-    delay(1000);
-
     // attempt to connect to WiFi network
     while (status != WL_CONNECTED)
     {
-        delay(500);
+        // flash the LED while connecting
+        digitalWrite(INTERNAL_LED, 1);
+        delay(100);
+        digitalWrite(INTERNAL_LED, 0);
+
+        delay(400);
 
         // Connect to WPA/WPA2 network
         status = WiFi.status();
     }
-
-    // server.begin();
 
     server.on(F("/"), handleRoot);
     server.on(F("/probe"), handleProbe);
@@ -95,12 +116,6 @@ void setup()
     server.on(F("/sethall"), handleSetHall);
     server.on(F("/sethand"), handleSetHand);
     server.on(F("/test"), handleTest);
-
-    server.on(F("/inline"), []()
-              { 
-                  server.send(200, F("text/plain"), F("This works as well")); 
-                  server.send(200, F("text/plain"), F("This works as well")); });
-
     server.onNotFound(handleNotFound);
 
     server.begin();
@@ -110,7 +125,7 @@ void setup()
 
     timeClient.begin();
 
-    digitalWrite(led, 1);
+    digitalWrite(INTERNAL_LED, 1);
 }
 
 void loop()
@@ -122,21 +137,110 @@ void loop()
 
     timer.tick(); // tick the timer
 
-    // Serial.println(timeClient.getFormattedTime());
-    // Serial.println(timeClient.getSeconds());
+    byte flashes = 0;
 
-    if (status == WL_CONNECTED)
+    if (status == WL_CONNECT_FAILED)
+        flashes = 1;
+    if (status == WL_CONNECTION_LOST)
+        flashes = 2;
+    if (status == WL_DISCONNECTED)
+        flashes = 3;
+    if (status == WL_NO_SHIELD)
+        flashes = 4;
+    if (status == WL_IDLE_STATUS)
+        flashes = 5;
+    if (status == WL_NO_SSID_AVAIL)
+        flashes = 6;
+    if (status == WL_SCAN_COMPLETED)
+        flashes = 7;
+
+    if (flashes > 0)
     {
+        for (byte i = 0; i < flashes; i++)
+        {
+            digitalWrite(INTERNAL_LED, 1);
+            delay(200);
+            digitalWrite(INTERNAL_LED, 0);
+            delay(400);
+        }
 
-        // Serial.println("connected");
-
-        // Connect to WPA/WPA2 network
-    }
-    else
-    {
-        Serial.println("not connected");
+        delay(1000);
     }
 }
+
+void setHallPos(byte board, byte hand, int hallPos)
+{
+    // Serial.println("SENDING CALIBRATION DATA");
+    Wire.beginTransmission(board);
+
+    Wire.write(0); // command
+    Wire.write(hand);
+
+    Wire.write(lowByte(hallPos));
+    Wire.write(highByte(hallPos));
+
+    Wire.endTransmission();
+}
+
+void setHandPos(byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed)
+{
+    Serial.println((String) "sending new handPos... board:" + board + ", hand:" + hand + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", clockwise:" + clockwise + ", speed:" + speed);
+    Wire.beginTransmission(board);
+
+    Wire.write(1); // command
+    Wire.write(hand);
+
+    Wire.write(lowByte(handPos));
+    Wire.write(highByte(handPos));
+
+    Wire.write(extraTurns);
+    Wire.write(clockwise);
+
+    Wire.write(lowByte(speed));
+    Wire.write(highByte(speed));
+
+    Wire.endTransmission();
+}
+
+void setUpWave()
+{
+    for (byte hand = 0; hand < HAND_COUNT; hand++)
+    {
+        int dest = hand % 2 == 0 ? top_right : bottom_left;
+
+        hands[hand].moveTo(dest, 0, 1, DEFAULT_SPEED);
+    }
+
+    // set up timer for setUpSpin in 5s
+    timer.in(5 * 1000, setUpSpin);
+}
+
+bool setUpSpin(void *)
+{
+    // timer.in(4 * 1000, spin);
+
+    for (byte hand = 0; hand < HAND_COUNT; hand++)
+    {
+        hands[hand].moveTo(bottom, 5, 1, DEFAULT_SPEED);
+        delay(1000);
+    }
+}
+
+// bool spin(void *)
+// {
+//     setHandPos(board, hand, bottom, 5, 1, DEFAULT_SPEED);
+
+//     for (byte board = 1; board <= 12; board++)
+//     {
+//         for (byte hand = 0; hand < 4; hand++)
+//         {
+//         }
+//     }
+// }
+
+/*
+   HTTP SERVER FUNCTIONS
+*/
 
 void handleRoot()
 {
@@ -281,93 +385,11 @@ void handleNotFound()
     server.send(404, F("text/plain"), message);
 }
 
+/*
+    UTILITY FUNCTIONS
+*/
+
 int16_t bytesToInt(byte low, byte high)
 {
     return ((high & 0xFF) << 8) | (low & 0xFF);
 }
-
-void setHallPos(byte board, byte hand, int hallPos)
-{
-    // Serial.println("SENDING CALIBRATION DATA");
-    Wire.beginTransmission(board);
-
-    Wire.write(0); // command
-    Wire.write(hand);
-
-    Wire.write(lowByte(hallPos));
-    Wire.write(highByte(hallPos));
-
-    Wire.endTransmission();
-}
-
-void setHandPos(byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed)
-{
-    Serial.println((String) "sending new handPos... board:" + board + ", hand:" + hand + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", clockwise:" + clockwise + ", speed:" + speed);
-    Wire.beginTransmission(board);
-
-    Wire.write(1); // command
-    Wire.write(hand);
-
-    Wire.write(lowByte(handPos));
-    Wire.write(highByte(handPos));
-
-    Wire.write(extraTurns);
-    Wire.write(clockwise);
-
-    Wire.write(lowByte(speed));
-    Wire.write(highByte(speed));
-
-    Wire.endTransmission();
-}
-
-void setUpWave()
-{
-    for (byte board = 1; board <= 12; board++)
-    {
-        for (byte hand = 0; hand < 4; hand++)
-        {
-            if (hand == 0 || hand == 3)
-            {
-                setHandPos(board, hand, bottom_left, 0, 1, DEFAULT_SPEED);
-            }
-            else
-            {
-                setHandPos(board, hand, top_right, 0, 1, DEFAULT_SPEED);
-            }
-        }
-    }
-
-    // set up timer for setUpSpin in 5s
-}
-
-bool setUpSpin(void *)
-{
-    timer.in(4 * 1000, spin);
-
-    setHandPos(board, hand, bottom, 5, 1, DEFAULT_SPEED);
-
-    for (byte board = 1; board <= 12; board++)
-    {
-        for (byte hand = 0; hand < 4; hand++)
-        {
-            // set up timer with offsets
-        }
-    }
-}
-
-bool spin(void *)
-{
-    setHandPos(board, hand, bottom, 5, 1, DEFAULT_SPEED);
-
-    for (byte board = 1; board <= 12; board++)
-    {
-        for (byte hand = 0; hand < 4; hand++)
-        {
-        }
-    }
-}
-
-/*
-    Todo:
-    - program a thing such that it _ends_ at a defined time (dynamic acceleration)
-*/

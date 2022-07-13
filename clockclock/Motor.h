@@ -17,6 +17,7 @@ public:
   void init(int hallPos);
   void setTargetPos(int targetPos, int extraTurns, bool clockwise, int speed = 1000);
   int getReportedPos();
+  int getCalibratedPos();
   int normalisePosition(long reported);
   void calibratePosition();
   void setSpeed(int stepsPerSecond);

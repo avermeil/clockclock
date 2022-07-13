@@ -54,9 +54,8 @@ void Motor::setTargetPos(int targetPos, int extraTurns, bool clockwise, int spee
 {
     setSpeed(speed);
     isClockwise = clockwise;
-    int reportedPos = getReportedPos();
 
-    int currentPos = normalisePosition(reportedPos - stepsOffset);
+    int currentPos = getCalibratedPos();
     long stepsToMake = 0;
     long extraSteps = extraTurns * SINGLE_ROTATION_STEPS;
 
@@ -100,6 +99,12 @@ int Motor::getReportedPos()
 {
     long reportedPos = stepper.getCurrentPositionInSteps();
     return normalisePosition(reportedPos);
+}
+
+int Motor::getCalibratedPos()
+{
+    int reportedPos = getReportedPos();
+    return normalisePosition(reportedPos - stepsOffset);
 }
 
 int Motor::normalisePosition(long reported)

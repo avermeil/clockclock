@@ -88,14 +88,19 @@ void loop()
 
 void requestEvent()
 {
-    Wire.write(lowByte(steppers[0].hallPosition));
-    Wire.write(highByte(steppers[0].hallPosition));
-    Wire.write(lowByte(steppers[1].hallPosition));
-    Wire.write(highByte(steppers[1].hallPosition));
-    Wire.write(lowByte(steppers[2].hallPosition));
-    Wire.write(highByte(steppers[2].hallPosition));
-    Wire.write(lowByte(steppers[3].hallPosition));
-    Wire.write(highByte(steppers[3].hallPosition));
+    for (byte i = 0; i < 4; i++)
+    {
+        // Hall position calibration
+        Wire.write(lowByte(steppers[i].hallPosition));
+        Wire.write(highByte(steppers[i].hallPosition));
+
+        // Hand position
+        Wire.write(lowByte(steppers[i].getCalibratedPos()));
+        Wire.write(highByte(steppers[i].getCalibratedPos()));
+
+        // isClockwise
+        Wire.write(steppers[i].isClockwise);
+    }
 }
 
 void receiveEvent(int howMany)
