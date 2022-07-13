@@ -41,7 +41,7 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
     Clock stuff
 */
 
-const int DEFAULT_SPEED = 500;
+const int DEFAULT_SPEED = 2000;
 const int SINGLE_ROTATION_STEPS = 4320;
 const int bottom = 0;
 const int bottom_left = SINGLE_ROTATION_STEPS * 1 / 8;
@@ -95,6 +95,8 @@ void setup()
     Serial.println(SECRET_SSID);
 
     status = WiFi.begin(SECRET_SSID, SECRET_PASS);
+
+    delay(1000);
 
     // attempt to connect to WiFi network
     while (status != WL_CONNECTED)
@@ -159,9 +161,9 @@ void loop()
         for (byte i = 0; i < flashes; i++)
         {
             digitalWrite(INTERNAL_LED, 1);
-            delay(200);
+            delay(100);
             digitalWrite(INTERNAL_LED, 0);
-            delay(400);
+            delay(200);
         }
 
         delay(1000);
@@ -333,17 +335,13 @@ void handleSetHall()
 void handleSetHand()
 {
     int count = 0;
-    for (int i = 0; i < (server.args() / 6); i++)
+    for (int i = 0; i < (server.args() / 5); i++)
     {
         int plus_i = count * 6;
-
-        setHandPos(
-            server.arg(0 + plus_i).toInt(),
-            server.arg(1 + plus_i).toInt(),
-            server.arg(2 + plus_i).toInt(),
-            server.arg(3 + plus_i).toInt(),
-            server.arg(4 + plus_i).toInt(),
-            server.arg(5 + plus_i).toInt());
+        hands[server.arg(0 + plus_i).toInt()].moveTo(server.arg(1 + plus_i).toInt(),
+                                                     server.arg(2 + plus_i).toInt(),
+                                                     server.arg(3 + plus_i).toInt(),
+                                                     server.arg(4 + plus_i).toInt());
 
         count++;
     }
