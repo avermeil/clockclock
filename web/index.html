@@ -23,9 +23,9 @@
                     <button type="button" onclick="javascript:wiggle()">Wiggle</button>
                     <button type="button" onclick="javascript:test()">Test</button>
                     <label for="ip">Hand</label>
-                    <select name="hand">
-                        <option value="0" selected>Hand 1</option>
-                        <option value="1">Hand 2</option>
+                    <select name="hand" id="handinput">
+                        <option selected>0</option>
+                        <option value="1"></option>
                         <option value="2">Hand 3</option>
                         <option value="3">Hand 4</option>
                         <option value="4">Hand 5</option>
@@ -60,7 +60,7 @@
                 Moves to
                 <input name="pos" type="number" min=0 max=4319 required />
                 at
-                <input name="speed" type="number" min=0 max=5000 value="400" required /> speed with
+                <input name="speed" type="number" min=0 max=5000 value="2000" required /> speed with
                 <select name="extraturns">
                     <option value="0">no extra turns</option>
                     <option value="1">1 extra turn</option>
@@ -108,14 +108,22 @@
 
             document.getElementById("boardCount").innerText = `(${attachedDevices.length})`
             document.getElementById("boards").innerHTML = attachedDevices.map(b => ` <code>${b}</code> `).join('')
-            document.getElementById("boardinput").innerHTML = attachedDevices.map(b => `<option value="${b}">Board #${b}</option>`).join('')
-
+            document.getElementById("handinput").innerHTML = attachedDevices.flatMap(b => {
+                const s = (+b - 1) * 4
+                return `
+                    <option value="${s}">Hand #${s}</option>
+                    <option value="${s + 1}">Hand #${s + 1}</option>
+                    <option value="${s + 2}">Hand #${s + 2}</option>
+                    <option value="${s + 3}">Hand #${s + 3}</option>
+                `
+            }).join('')
         }
 
-        async function getCalibrationData() {
-            const { board, hand } = document.getElementById("setupForm").elements;
 
-            const hallPositions = await request('gethall?board=' + board.value)
+        async function getCalibrationData() {
+            const { hand } = document.getElementById("setupForm").elements;
+
+            const hallPositions = await request('gethall?board=' + hand.value)
 
             const { hall } = document.getElementById("calibrationForm").elements;
             const { pos } = document.getElementById("movementForm").elements;
@@ -155,7 +163,6 @@
             const setup = document.getElementById("setupForm").elements
             const inputs = document.getElementById("movementForm").elements;
 
-            const board = setup.board.value
             const hand = setup.hand.value
             const pos = inputs.pos.value
             const speed = inputs.speed.value
@@ -163,7 +170,7 @@
             const clockwise = inputs.clockwise.value
 
             // byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed
-            await request(`sethand?board=${board}&hand=${hand}&pos=${pos}&extraturns=${extraturns}&clockwise=${clockwise}&speed=${speed}`)
+            await request(`sethand?hand=${hand}&pos=${pos}&extraturns=${extraturns}&clockwise=${clockwise}&speed=${speed}`)
         }
 
         async function wiggle() {
