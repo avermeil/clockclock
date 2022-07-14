@@ -100,8 +100,38 @@ Hand hands[HAND_COUNT] = {
 
 void setup()
 {
-    Wire.begin();
-    Serial.begin(9600);            // initialize serial communication
+
+    // start of crazy clock reduction
+    GCLK->GENDIV.reg = GCLK_GENDIV_DIV(12) | // Divide the 48MHz clock source by divisor 12: 48MHz/12=4MHz
+                       GCLK_GENDIV_ID(3);    // Select Generic Clock (GCLK) 3
+    while (GCLK->STATUS.bit.SYNCBUSY)
+        ; // Wait for synchronization
+
+    GCLK->GENCTRL.reg = GCLK_GENCTRL_IDC |         // Set the duty cycle to 50/50 HIGH/LOW
+                        GCLK_GENCTRL_GENEN |       // Enable GCLK3
+                        GCLK_GENCTRL_SRC_DFLL48M | // Set the 48MHz clock source
+                        GCLK_GENCTRL_ID(3);        // Select GCLK3
+    while (GCLK->STATUS.bit.SYNCBUSY)
+        ; // Wait for synchronization
+
+    SerialUSB.begin(115200); // Set-up the native USB port
+
+    delay(1000);
+    // while (!SerialUSB)
+    //     ; // Wait until the native USB port is ready
+
+    Wire.begin();                                     // Set-up the I2C port
+    sercom4.disableWIRE();                            // Disable the I2C SERCOM
+    GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN |          // Enable GCLK3 as clock soruce to SERCOM3
+                        GCLK_CLKCTRL_GEN_GCLK3 |      // Select GCLK3
+                        GCLK_CLKCTRL_ID_SERCOM4_CORE; // Feed the GCLK3 to SERCOM3
+    while (GCLK->STATUS.bit.SYNCBUSY)
+        ;                                                    // Wait for synchronization
+    SERCOM4->I2CM.BAUD.bit.BAUD = 4000000 / (2 * 10000) - 1; // Set the I2C clock rate to 10kHz
+    sercom4.enableWIRE();                                    // Enable the I2C SERCOM
+
+    // Wire.begin();
+    // Serial.begin(9600);            // initialize serial communication
     pinMode(INTERNAL_LED, OUTPUT); // set the LED pin mode
 
     // check for the WiFi module:

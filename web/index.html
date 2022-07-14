@@ -130,6 +130,8 @@
 
             hall.value = hallPositions[+hand.value][1]
             pos.value = 4320 * 0.75
+
+            return hallPositions
         }
 
         async function setCalibrationData() {
@@ -235,7 +237,7 @@
                 button.disabled = false
             }
 
-            console.log(j)
+            // console.log(j)
 
             return j
         }
@@ -244,8 +246,13 @@
 
         async function blah() {
             while (1) {
-                await probe()
-                await getCalibrationData()
+                // await probe()
+                const res = await getCalibrationData()
+
+                console.log(res.map(r => r[1]))
+                if (res.map(r => r[1]).includes(-1)) {
+                    throw new Error('BAD BAD')
+                }
                 // await new Promise((resolve) => setTimeout(resolve, 500))
             }
         }
