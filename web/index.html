@@ -244,11 +244,12 @@
 
         async function blah() {
             while (1) {
-                await getCalibrationData()
+                await probe()
+                // await getCalibrationData()
                 await new Promise((resolve) => setTimeout(resolve, 500))
             }
         }
-        // blah()
+        blah()
     </script>
 </body>
 
