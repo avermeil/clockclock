@@ -122,12 +122,44 @@ Hand hands[HAND_COUNT] = {
 
 void setup()
 {
+
+    // start of crazy clock reduction
+    GCLK->GENDIV.reg = GCLK_GENDIV_DIV(12) | // Divide the 48MHz clock source by divisor 12: 48MHz/12=4MHz
+                       GCLK_GENDIV_ID(3);    // Select Generic Clock (GCLK) 3
+    while (GCLK->STATUS.bit.SYNCBUSY)
+        ; // Wait for synchronization
+
+    GCLK->GENCTRL.reg = GCLK_GENCTRL_IDC |         // Set the duty cycle to 50/50 HIGH/LOW
+                        GCLK_GENCTRL_GENEN |       // Enable GCLK3
+                        GCLK_GENCTRL_SRC_DFLL48M | // Set the 48MHz clock source
+                        GCLK_GENCTRL_ID(3);        // Select GCLK3
+    while (GCLK->STATUS.bit.SYNCBUSY)
+        ; // Wait for synchronization
+
+    SerialUSB.begin(115200); // Set-up the native USB port
+
+    delay(1000);
+    // while (!SerialUSB)
+    //     ; // Wait until the native USB port is ready
+
+    Wire.begin();                                     // Set-up the I2C port
+    sercom4.disableWIRE();                            // Disable the I2C SERCOM
+    GCLK->CLKCTRL.reg = GCLK_CLKCTRL_CLKEN |          // Enable GCLK3 as clock soruce to SERCOM3
+                        GCLK_CLKCTRL_GEN_GCLK3 |      // Select GCLK3
+                        GCLK_CLKCTRL_ID_SERCOM4_CORE; // Feed the GCLK3 to SERCOM3
+    while (GCLK->STATUS.bit.SYNCBUSY)
+        ;                                                    // Wait for synchronization
+    SERCOM4->I2CM.BAUD.bit.BAUD = 4000000 / (2 * 10000) - 1; // Set the I2C clock rate to 10kHz
+    sercom4.enableWIRE();                                    // Enable the I2C SERCOM
+
+    // end of cray section
+
     pinMode(13, OUTPUT);
 
-    Serial.begin(115200);
-    Wire.begin();
+    // Serial.begin(115200);
+    // Wire.begin();
 
-    // Wire.setClock(10000L); // doesn't work?
+    // Wire.setClock(1000); // doesn't work?
 
     delay(2000);
 
@@ -149,23 +181,24 @@ void setup()
     Serial.print(F("Connecting to SSID: "));
     Serial.println(SECRET_SSID);
 
-    status = WiFi.begin(SECRET_SSID, SECRET_PASS);
+    connectWifi();
+    // status = WiFi.begin(SECRET_SSID, SECRET_PASS);
 
-    delay(1000);
+    // delay(1000);
 
-    // attempt to connect to WiFi network
-    while (status != WL_CONNECTED)
-    {
-        // flash the LED while connecting
-        digitalWrite(INTERNAL_LED, 1);
-        delay(100);
-        digitalWrite(INTERNAL_LED, 0);
+    // // attempt to connect to WiFi network
+    // while (status != WL_CONNECTED)
+    // {
+    //     // flash the LED while connecting
+    //     digitalWrite(INTERNAL_LED, 1);
+    //     delay(100);
+    //     digitalWrite(INTERNAL_LED, 0);
 
-        delay(400);
+    //     delay(400);
 
-        // Connect to WPA/WPA2 network
-        status = WiFi.status();
-    }
+    //     // Connect to WPA/WPA2 network
+    //     status = WiFi.status();
+    // }
 
     server.on(F("/"), handleRoot);
     server.on(F("/probe"), handleProbe);
@@ -184,7 +217,27 @@ void setup()
 
     digitalWrite(INTERNAL_LED, 1);
 
-    setUpWave();
+    timer.every(1000, moveSingleHand);
+}
+
+void connectWifi()
+{
+    status = WiFi.begin(SECRET_SSID, SECRET_PASS);
+
+    delay(500);
+
+    // attempt to connect to WiFi network
+    while (status != WL_CONNECTED)
+    {
+        // flash the LED while connecting
+        digitalWrite(INTERNAL_LED, 1);
+        delay(50);
+        digitalWrite(INTERNAL_LED, 0);
+        delay(50);
+
+        // Connect to WPA/WPA2 network
+        status = WiFi.status();
+    }
 }
 
 void loop()
@@ -207,7 +260,11 @@ void loop()
     if (status == WL_NO_SHIELD)
         flashes = 4;
     if (status == WL_IDLE_STATUS)
+    {
         flashes = 5;
+        // Serial.print(F("Encountered WL_IDLE_STATUS, reconnecting... "));
+        // connectWifi();
+    }
     if (status == WL_NO_SSID_AVAIL)
         flashes = 6;
     if (status == WL_SCAN_COMPLETED)
@@ -277,7 +334,7 @@ void setUpWave()
 bool setUpSpin(void *)
 {
 
-    for (byte j = 7; j >= 0; j--)
+    for (byte j = 0; j < 8; j++)
     {
         Serial.println((String) "column:" + j);
 
@@ -289,6 +346,14 @@ bool setUpSpin(void *)
         }
         delay(300);
     }
+}
+
+bool moveSingleHand(void *)
+{
+    // Serial.println((String) "1s");
+    Serial.println(timeClient.getFormattedTime());
+
+    // hands[1].moveTo(bottom, 5, 1, 1000);
 }
 
 // bool spin(void *)
@@ -363,25 +428,31 @@ void handleGetHall()
 
 void handleProbe()
 {
+    Serial.println("Probing..."); // print the character
+
     byte count = 0;
     String json = "[";
-    for (byte i = 1; i < 20; i++)
-    {
-        Wire.beginTransmission(i);
-        if (Wire.endTransmission() == 0)
-        {
-            if (count != 0)
-            {
-                json = json + ",";
-            }
-            json = json + String(i);
+    // for (byte i = 1; i < 13; i++)
+    // {
+    //     Wire.beginTransmission(i);
+    //     if (Wire.endTransmission() == 0)
+    //     {
+    //         if (count != 0)
+    //         {
+    //             json = json + ",";
+    //         }
+    //         json = json + String(i);
 
-            count++;
-        }         // end of good response
-        delay(5); // give devices time to recover
-    }             // end of for loop
+    //         count++;
+    //     }          // end of good response
+    //     delay(10); // give devices time to recover
+    // }              // end of for loop
 
-    json = json + "]";
+    // json = json + "]";
+
+    json = json + "1,2,3,4,5,6,7,8,9,10,11,12]";
+
+    Serial.println("Done probing."); // print the character
 
     server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
     server.send(200, F("application/json"), json);

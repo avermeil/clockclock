@@ -21,13 +21,22 @@ Hand::Hand(byte _board, byte _hand_index)
 
 void Hand::refreshData()
 {
+    Serial.println("Refreshing data...");
+    long start = micros();
+
     Wire.requestFrom(board, 20);
+    // Serial.println("Sent request for 20 bytes");
 
     for (byte i = 0; i < 4; i++)
     {
         int _calibration = _bytesToInt(Wire.read(), Wire.read());
+        // Serial.println((String) "got calibration for hand " + i + ": " + _calibration);
+
         int _position = _bytesToInt(Wire.read(), Wire.read());
+        // Serial.println((String) "got position for hand " + i + ": " + _position);
+
         bool _isClockwise = Wire.read();
+        // Serial.println((String) "got clockwise for hand " + i + ": " + _isClockwise);
 
         if (i == hand_index)
         {
@@ -36,12 +45,15 @@ void Hand::refreshData()
             isClockwise = _isClockwise;
         }
     }
+
+    long duration = micros() - start;
+    Serial.println("Took micros:");
+    Serial.println(duration);
 }
 
 void Hand::moveTo(int handPos, byte extraTurns, bool clockwise, int speed)
 {
     Serial.println((String) "sending new handPos... board:" + board + ", hand_index:" + hand_index + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", clockwise:" + clockwise + ", speed:" + speed);
-
     Wire.beginTransmission(board);
 
     Wire.write(1); // command
