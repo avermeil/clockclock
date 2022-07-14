@@ -123,17 +123,17 @@
         async function getCalibrationData() {
             const { hand } = document.getElementById("setupForm").elements;
 
-            const hallPositions = await request('gethall?board=' + hand.value)
+            const hallPositions = await request('gethall')
 
             const { hall } = document.getElementById("calibrationForm").elements;
             const { pos } = document.getElementById("movementForm").elements;
 
-            hall.value = hallPositions[+hand.value]
+            hall.value = hallPositions[+hand.value][1]
             pos.value = 4320 * 0.75
         }
 
         async function setCalibrationData() {
-            const { board, hand } = document.getElementById("setupForm").elements
+            const { hand } = document.getElementById("setupForm").elements
             const { hall } = document.getElementById("calibrationForm").elements;
             if (!hall.value) {
                 throw new Error('no calibration data')
@@ -142,7 +142,7 @@
 
             pos.value = 4320 * 0.75
 
-            await request(`sethall?board=${board.value}&hand=${hand.value}&pos=${hall.value}`)
+            await request(`sethall?hand=${hand.value}&pos=${hall.value}`)
         }
 
         async function calibratePlus(amount) {
@@ -245,8 +245,8 @@
         async function blah() {
             while (1) {
                 await probe()
-                // await getCalibrationData()
-                await new Promise((resolve) => setTimeout(resolve, 500))
+                await getCalibrationData()
+                // await new Promise((resolve) => setTimeout(resolve, 500))
             }
         }
         blah()

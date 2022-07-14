@@ -26,14 +26,12 @@ const char PASS[] = SECRET_PASS;
 int status = WL_IDLE_STATUS; // the Wifi radio's status
 int INTERNAL_LED = 13;
 
-WiFiUDP ntpUDP;
-
 WiFiWebServer server(80);
 
 /*
     NTP stuff
 */
-
+WiFiUDP ntpUDP;
 const long utcOffsetInSeconds = 3600;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
