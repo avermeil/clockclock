@@ -158,7 +158,7 @@ void setup()
         // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
         status = WiFi.begin(ssid, pass);
         // wait 10 seconds for connection:
-        delay(5000);
+        delay(3000);
     }
     server.begin(); // start the web server on port 80
     timeClient.begin();
@@ -173,6 +173,19 @@ void loop()
     handleWebServer();
     timer.tick(); // tick the timer
     timeClient.update();
+}
+
+void setDigitTo(byte digit, byte symbol)
+{
+    byte start_index = digit * 12;
+    byte end_index = start_index + 12;
+
+    for (byte hand = start_index; hand < end_index; hand++)
+    {
+        int dest = hands[hand].getDigitPos(symbol);
+
+        hands[hand].moveTo(dest, 0, 1, DEFAULT_SPEED);
+    }
 }
 
 void setUpWave()
@@ -393,7 +406,12 @@ void handleTest()
 {
     Serial.println("doing test...");
 
-    setUpWave();
+    // setUp Wave();
+
+    setDigitTo(0, 4);
+    setDigitTo(1, 5);
+    setDigitTo(2, 6);
+    setDigitTo(3, 7);
 
     response += "{}";
 }

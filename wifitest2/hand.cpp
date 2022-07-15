@@ -2,21 +2,46 @@
 #include <Wire.h>
 #include "hand.h"
 
-const long SINGLE_ROTATION_STEPS = 4320;
+const int SINGLE_ROTATION_STEPS = 4320;
+const int BOTTOM = 0;
+const int BOTTOM_LEFT = SINGLE_ROTATION_STEPS * 1 / 8;
+const int LEFT = SINGLE_ROTATION_STEPS * 2 / 8;
+const int TOP_LEFT = SINGLE_ROTATION_STEPS * 3 / 8;
+const int TOP = SINGLE_ROTATION_STEPS * 4 / 8;
+const int TOP_RIGHT = SINGLE_ROTATION_STEPS * 5 / 8;
+const int RIGHT = SINGLE_ROTATION_STEPS * 6 / 8;
+const int BOTTOM_RIGHT = SINGLE_ROTATION_STEPS * 7 / 8;
 
 short _bytesToInt(byte low, byte high)
 {
     return ((high & 0xFF) << 8) | (low & 0xFF);
 }
 
-Hand::Hand(byte _board, byte _hand_index)
+Hand::Hand(byte _board, byte _handIndex)
 {
     board = _board;
-    hand_index = _hand_index;
+    handIndex = _handIndex;
 
     position = 0;
     calibration = 0;
     isClockwise = false;
+
+    isMinute = handIndex % 2 == 0;
+
+    byte boardDigitIndex = (board - 1) % 3;
+
+    if (boardDigitIndex == 0 && (handIndex == 0 || handIndex == 1))
+        digitIndex = 0;
+    if (boardDigitIndex == 0 && (handIndex == 2 || handIndex == 3))
+        digitIndex = 1;
+    if (boardDigitIndex == 1 && (handIndex == 0 || handIndex == 1))
+        digitIndex = 2;
+    if (boardDigitIndex == 1 && (handIndex == 2 || handIndex == 3))
+        digitIndex = 3;
+    if (boardDigitIndex == 2 && (handIndex == 0 || handIndex == 1))
+        digitIndex = 4;
+    if (boardDigitIndex == 2 && (handIndex == 2 || handIndex == 3))
+        digitIndex = 5;
 }
 
 void Hand::refreshData()
@@ -38,7 +63,7 @@ void Hand::refreshData()
         bool _isClockwise = Wire.read();
         // Serial.println((String) "got clockwise for hand " + i + ": " + _isClockwise);
 
-        if (i == hand_index)
+        if (i == handIndex)
         {
             position = _position;
             calibration = _calibration;
@@ -53,11 +78,11 @@ void Hand::refreshData()
 
 void Hand::moveTo(int handPos, byte extraTurns, bool clockwise, int speed)
 {
-    Serial.println((String) "sending new handPos... board:" + board + ", hand_index:" + hand_index + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", clockwise:" + clockwise + ", speed:" + speed);
+    Serial.println((String) "sending new handPos... board:" + board + ", handIndex:" + handIndex + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", clockwise:" + clockwise + ", speed:" + speed);
     Wire.beginTransmission(board);
 
     Wire.write(1); // command
-    Wire.write(hand_index);
+    Wire.write(handIndex);
 
     Wire.write(lowByte(handPos));
     Wire.write(highByte(handPos));
@@ -69,4 +94,169 @@ void Hand::moveTo(int handPos, byte extraTurns, bool clockwise, int speed)
     Wire.write(highByte(speed));
 
     Wire.endTransmission();
+}
+
+int Hand::combo(int minute, int hour)
+{
+    if (isMinute)
+        return minute;
+    else
+        return hour;
+}
+
+int Hand::getDigitPos(byte symbol)
+{
+    byte segment = digitIndex + 1;
+    Serial.println((String) "getDigitPos... board:" + board + ", handIndex:" + handIndex + ", isMinute:" + isMinute + ", digitIndex:" + digitIndex);
+    Serial.println((String) "segment:" + segment);
+
+    if (symbol == 0)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 2)
+            return combo(BOTTOM, LEFT);
+        if (segment == 3)
+            return combo(BOTTOM, TOP);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 5)
+            return combo(TOP, RIGHT);
+        if (segment == 6)
+            return combo(TOP, LEFT);
+    }
+
+    if (symbol == 1)
+    {
+        if (segment == 2)
+            return BOTTOM;
+        if (segment == 4)
+            return combo(TOP, BOTTOM);
+        if (segment == 6)
+            return TOP;
+    }
+
+    if (symbol == 2)
+    {
+        if (segment == 1)
+            return RIGHT;
+        if (segment == 2)
+            return combo(BOTTOM, LEFT);
+        if (segment == 3)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 4)
+            return combo(TOP, LEFT);
+        if (segment == 5)
+            return combo(TOP, RIGHT);
+        if (segment == 6)
+            return LEFT;
+    }
+
+    if (symbol == 3)
+    {
+        if (segment == 1)
+            return RIGHT;
+        if (segment == 2)
+            return combo(BOTTOM, LEFT);
+        if (segment == 3)
+            return RIGHT;
+        if (segment == 4)
+            return combo(BOTTOM, LEFT);
+        if (segment == 5)
+            return RIGHT;
+        if (segment == 6)
+            return combo(TOP, LEFT);
+    }
+
+    if (symbol == 4)
+    {
+        if (segment == 1)
+            return BOTTOM;
+        if (segment == 2)
+            return BOTTOM;
+        if (segment == 3)
+            return combo(TOP, RIGHT);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 6)
+            return TOP;
+    }
+
+    if (symbol == 5)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 2)
+            return LEFT;
+        if (segment == 3)
+            return combo(TOP, RIGHT);
+        if (segment == 4)
+            return combo(BOTTOM, LEFT);
+        if (segment == 5)
+            return RIGHT;
+        if (segment == 6)
+            return combo(TOP, LEFT);
+    }
+
+    if (symbol == 6)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 2)
+            return LEFT;
+        if (segment == 3)
+            return combo(BOTTOM, TOP);
+        if (segment == 4)
+            return combo(BOTTOM, LEFT);
+        if (segment == 5)
+            return combo(TOP, RIGHT);
+        if (segment == 6)
+            return combo(TOP, LEFT);
+    }
+
+    if (symbol == 7)
+    {
+        if (segment == 1)
+            return RIGHT;
+        if (segment == 2)
+            return combo(BOTTOM, LEFT);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 6)
+            return TOP;
+    }
+
+    if (symbol == 8)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 2)
+            return combo(BOTTOM, LEFT);
+        if (segment == 3)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 4)
+            return combo(BOTTOM, LEFT);
+        if (segment == 5)
+            return combo(TOP, RIGHT);
+        if (segment == 6)
+            return combo(TOP, LEFT);
+    }
+
+    if (symbol == 9)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 2)
+            return combo(BOTTOM, LEFT);
+        if (segment == 3)
+            return combo(TOP, RIGHT);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 5)
+            return RIGHT;
+        if (segment == 6)
+            return combo(TOP, LEFT);
+    }
+
+    return BOTTOM_LEFT;
 }
