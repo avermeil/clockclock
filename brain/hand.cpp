@@ -96,6 +96,20 @@ void Hand::moveTo(int handPos, byte extraTurns, bool clockwise, int speed)
     Wire.endTransmission();
 }
 
+void Hand::setHallPos(int hallPos)
+{
+    // Serial.println("SENDING CALIBRATION DATA");
+    Wire.beginTransmission(board);
+
+    Wire.write(0); // command
+    Wire.write(handIndex);
+
+    Wire.write(lowByte(hallPos));
+    Wire.write(highByte(hallPos));
+
+    Wire.endTransmission();
+}
+
 int Hand::combo(int minute, int hour)
 {
     if (isMinute)
@@ -107,8 +121,6 @@ int Hand::combo(int minute, int hour)
 int Hand::getDigitPos(byte symbol)
 {
     byte segment = digitIndex + 1;
-    Serial.println((String) "getDigitPos... board:" + board + ", handIndex:" + handIndex + ", isMinute:" + isMinute + ", digitIndex:" + digitIndex);
-    Serial.println((String) "segment:" + segment);
 
     if (symbol == 0)
     {
@@ -161,7 +173,7 @@ int Hand::getDigitPos(byte symbol)
         if (segment == 3)
             return RIGHT;
         if (segment == 4)
-            return combo(BOTTOM, LEFT);
+            return combo(TOP, LEFT);
         if (segment == 5)
             return RIGHT;
         if (segment == 6)
@@ -233,9 +245,9 @@ int Hand::getDigitPos(byte symbol)
         if (segment == 2)
             return combo(BOTTOM, LEFT);
         if (segment == 3)
-            return combo(BOTTOM, RIGHT);
+            return combo(TOP, RIGHT);
         if (segment == 4)
-            return combo(BOTTOM, LEFT);
+            return combo(TOP, LEFT);
         if (segment == 5)
             return combo(TOP, RIGHT);
         if (segment == 6)

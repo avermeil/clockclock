@@ -144,7 +144,9 @@
 
             pos.value = 4320 * 0.75
 
-            await request(`sethall?hand=${hand.value}&pos=${hall.value}`)
+            // await request(`sethall?hand=${hand.value}&pos=${hall.value}`)
+            await request(`${hand.value.padStart(2, '0')}:${hall.value.padStart(4, '0')}:sethall`)
+
         }
 
         async function calibratePlus(amount) {
@@ -165,14 +167,16 @@
             const setup = document.getElementById("setupForm").elements
             const inputs = document.getElementById("movementForm").elements;
 
-            const hand = setup.hand.value
-            const pos = inputs.pos.value
-            const speed = inputs.speed.value
+            const hand = setup.hand.value.padStart(2, '0')
+            const pos = inputs.pos.value.padStart(4, '0')
+            const speed = inputs.speed.value.padStart(4, '0')
             const extraturns = inputs.extraturns.value
             const clockwise = inputs.clockwise.value
 
+
+
             // byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed
-            await request(`sethand?hand=${hand}&pos=${pos}&extraturns=${extraturns}&clockwise=${clockwise}&speed=${speed}`)
+            await request(`${hand}:${pos}:${extraturns}:${clockwise}:${speed}:sethand`)
         }
 
         async function wiggle() {
