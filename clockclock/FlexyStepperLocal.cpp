@@ -897,6 +897,113 @@ bool FlexyStepper::processMovement(void)
     return (false);
 }
 
+// Alternative implementation that returns true only if a step was made.
+bool FlexyStepper::processMovementAlt(void)
+{
+    unsigned long currentTime_InUS;
+    unsigned long periodSinceLastStep_InUS;
+    long distanceToTarget_Signed;
+
+    //
+    // check if currently stopped
+    //
+    if (directionOfMotion == 0)
+    {
+        distanceToTarget_Signed = targetPosition_InSteps - currentPosition_InSteps;
+
+        //
+        // check if target position in a positive direction
+        //
+        if (distanceToTarget_Signed > 0)
+        {
+            directionOfMotion = 1;
+            digitalWrite(directionPin, normalDirection ? POSITIVE_DIRECTION : NEGATIVE_DIRECTION);
+            nextStepPeriod_InUS = periodOfSlowestStep_InUS;
+            lastStepTime_InUS = micros();
+            return (false);
+        }
+
+        //
+        // check if target position in a negative direction
+        //
+        else if (distanceToTarget_Signed < 0)
+        {
+            directionOfMotion = -1;
+            digitalWrite(directionPin, normalDirection ? NEGATIVE_DIRECTION : POSITIVE_DIRECTION);
+            nextStepPeriod_InUS = periodOfSlowestStep_InUS;
+            lastStepTime_InUS = micros();
+            return (false);
+        }
+
+        else
+            return (false);
+    }
+
+    //
+    // determine how much time has elapsed since the last step (Note 1: this method
+    // works even if the time has wrapped. Note 2: all variables must be unsigned)
+    //
+    currentTime_InUS = micros();
+    periodSinceLastStep_InUS = currentTime_InUS - lastStepTime_InUS;
+
+    //
+    // if it is not time for the next step, return
+    //
+    if (periodSinceLastStep_InUS < (unsigned long)nextStepPeriod_InUS)
+        return (false);
+
+    //
+    // execute the step on the rising edge
+    //
+    digitalWrite(stepPin, HIGH);
+
+    //
+    // this delay almost nothing because there's so much code between rising &
+    // falling edges
+    //
+    delayMicroseconds(2);
+
+    //
+    // update the current position and speed
+    //
+    currentPosition_InSteps += directionOfMotion;
+    currentStepPeriod_InUS = nextStepPeriod_InUS;
+
+    //
+    // remember the time that this step occured
+    //
+    lastStepTime_InUS = currentTime_InUS;
+
+    //
+    // figure out how long before the next step
+    //
+    DeterminePeriodOfNextStep();
+
+    //
+    // return the step line low
+    //
+    digitalWrite(stepPin, LOW);
+
+    //
+    // check if the move has reached its final target position, return true if all
+    // done
+    //
+    if (currentPosition_InSteps == targetPosition_InSteps)
+    {
+        //
+        // at final position, make sure the motor is not going too fast
+        //
+        if (nextStepPeriod_InUS >= minimumPeriodForAStoppedMotion)
+        {
+            currentStepPeriod_InUS = 0.0;
+            nextStepPeriod_InUS = 0.0;
+            directionOfMotion = 0;
+        }
+    }
+
+    return (true);
+}
+
 //
 // Get the current velocity of the motor in steps/second.  This functions is
 // updated while it accelerates up and down in speed.  This is not the desired

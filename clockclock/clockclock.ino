@@ -64,59 +64,19 @@ void loop()
             continue;
         }
 
-        steppers[i].stepper.processMovement();
+        bool stepped = steppers[i].stepper.processMovementAlt();
 
-        if (!steppers[i].initialised)
-        {
-            float filtered = filters[i].filter(analogRead(steppers[i].hallPin));
-            steppers[i].calibratePosition(filtered);
-        }
-        else
+        if (steppers[i].initialised)
         {
             filters[i].reset();
         }
+        else if (stepped)
+        {
 
-        // if (i != 3)
-        // {
-        //     Serial.print(filtered);
-        //     Serial.print(",");
-        // }
-        // else
-        // {
-        //     Serial.println(filtered);
-        // }
+            float filtered = filters[i].filter(analogRead(steppers[i].hallPin));
+            steppers[i].calibratePosition(filtered);
+        }
     }
-    // steppers[0].loop();
-    // steppers[1].loop();
-    // steppers[2].loop();
-    // steppers[3].loop();
-
-    // float filtered1 = adcFilter1.filter(analogRead(A3));
-    // float filtered2 = adcFilter2.filter(analogRead(A2));
-    // float filtered3 = adcFilter3.filter(analogRead(A7));
-    // float filtered4 = adcFilter4.filter(analogRead(A6));
-
-    // int sensorValue1 = analogRead(A3);
-    // int sensorValue2 = analogRead(A2);
-    // int sensorValue3 = analogRead(A7);
-    // int sensorValue4 = analogRead(A6);
-    // Serial.print(filtered1);   // print the character
-    // Serial.print(",");         // print the character
-    // Serial.print(filtered2);   // print the character
-    // Serial.print(",");         // print the character
-    // Serial.print(filtered3);   // print the character
-    // Serial.print(",");         // print the character
-    // Serial.println(filtered4); // print the character
-
-    // if (Serial.available() > 0)
-    // {
-    //     String command = Serial.readStringUntil('\n');
-    //     int pos = command.substring(0, 1).toInt();
-    //     bool clockwise = !command.substring(1).toInt();
-
-    //     // stepper1.setTargetPos(pos * 540, 0, clockwise);
-    //     // stepper2.setTargetPos(pos * 540, 0, clockwise);
-    // }
 }
 
 void requestEvent()
@@ -138,22 +98,15 @@ void requestEvent()
 
 void receiveEvent(int howMany)
 {
-    // Serial.println(F("--------- NEW COMMAND:"));
 
     byte command = Wire.read();
     byte hand = Wire.read();
-    // Serial.print(F("command:"));
-    // Serial.println(command);
-    // Serial.print(F("hand:"));
-    // Serial.println(hand);
 
     if (command == 0)
     {
         byte lowHallPos = Wire.read();
         byte highHallPos = Wire.read();
         int hallPos = bytesToInt(lowHallPos, highHallPos);
-        // Serial.print(F("hallPos:"));
-        // Serial.println(hallPos);
 
         EEPROM.put(hand * 2, hallPos);
 

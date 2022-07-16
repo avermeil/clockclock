@@ -85,6 +85,7 @@ public:
     bool motionComplete();
     float getCurrentVelocityInStepsPerSecond();
     bool processMovement(void);
+    bool processMovementAlt(void);
 
 private:
     //

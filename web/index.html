@@ -40,6 +40,8 @@
                 </fieldset>
 
             </form>
+
+            <table id="handsTable"></table>
             <form id="calibrationForm" action="javascript:setCalibrationData()">
                 <fieldset>
                     <h4>Hall Position</h4>
@@ -48,10 +50,12 @@
 
                     <button type="submit" class="wait">Calibrate</button>
 
+                    <button onclick="javascript:calibratePlus(-50)" type="button" class="wait">-50</button>
                     <button onclick="javascript:calibratePlus(-10)" type="button" class="wait">-10</button>
                     <button onclick="javascript:calibratePlus(-5)" type="button" class="wait">-5</button>
                     <button onclick="javascript:calibratePlus(5)" type="button" class="wait">+5</button>
                     <button onclick="javascript:calibratePlus(10)" type="button" class="wait">+10</button>
+                    <button onclick="javascript:calibratePlus(50)" type="button" class="wait">+50</button>
                 </fieldset>
             </form>
             <form id="movementForm" action="javascript:setHandPosition()">
@@ -117,6 +121,24 @@
                     <option value="${s + 3}">Hand #${s + 3}</option>
                 `
             }).join('')
+
+
+            document.getElementById("handsTable").innerHTML = [0, 2, 4].map(rowId => {
+                return '<tr>' + [0, 1, 2, 3, 4, 5, 6, 7].map(columnId => {
+                    const hand = ((columnId * 6) + rowId)
+                    return `
+                    <td class="clock-cell">
+                        <div onclick="selectHand(${hand})" class="hand-selector">${hand}</div>
+                        <div onclick="selectHand(${hand + 1})" class="hand-selector">${hand + 1}</div>
+                    </td>`
+                }).join('') + '</tr>'
+            }).join('')
+        }
+
+        function selectHand(hand) {
+            document.getElementById("handinput").value = hand
+            // setHandPosition()
+            getCalibrationData()
         }
 
 
@@ -270,6 +292,24 @@
         width: 60px;
         height: 60px;
         margin-bottom: 0.7rem;
+    }
+
+    .clock-cell {
+        border-radius: 999px;
+        border: 1px solid #ccc;
+        width: 30px;
+        height: 30px;
+    }
+
+    .hand-selector {
+        cursor: pointer;
+        text-align: center;
+        vertical-align: middle;
+        height: 42px;
+    }
+
+    .hand-selector:hover {
+        background-color: rgb(255, 219, 88);
     }
 
     body {
