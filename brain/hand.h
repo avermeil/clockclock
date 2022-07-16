@@ -20,6 +20,7 @@ public:
     int position;
     int calibration;
     bool isClockwise;
+    bool hasLooseHourHand;
 };
 
 #endif

@@ -42,6 +42,8 @@ Hand::Hand(byte _board, byte _handIndex)
         digitIndex = 4;
     if (boardDigitIndex == 2 && (handIndex == 2 || handIndex == 3))
         digitIndex = 5;
+
+    hasLooseHourHand = (board == 3 && handIndex == 3) || (board == 11 && handIndex == 1);
 }
 
 void Hand::refreshData()
@@ -79,6 +81,40 @@ void Hand::refreshData()
 void Hand::moveTo(int handPos, byte extraTurns, bool clockwise, int speed)
 {
     Serial.println((String) "sending new handPos... board:" + board + ", handIndex:" + handIndex + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", clockwise:" + clockwise + ", speed:" + speed);
+
+    if (!isMinute)
+    {
+        Serial.println((String) "is hour...");
+        // Some hands a super loose and will "fall" ahead of their position while going down.
+        // We need to compensate for this.
+        if (hasLooseHourHand)
+        {
+            Serial.println((String) "SUPER LOOSE HAND...");
+
+            if (clockwise && (handPos == RIGHT || handPos == BOTTOM_RIGHT || handPos == TOP_RIGHT))
+            {
+                Serial.println((String) "removing 30.");
+
+                handPos -= 30;
+            }
+            if (!clockwise && (handPos == RIGHT || handPos == BOTTOM_LEFT || handPos == TOP_LEFT))
+            {
+                Serial.println((String) "adding 30.");
+                handPos += 30;
+            }
+        }
+        // we need to compensate for the play in the gears for the non-loose minute hands
+        else if (clockwise)
+        {
+            handPos += 30;
+            Serial.println((String) "compensating for clockwise play in gears for non-loose minute hand");
+            if (handPos >= SINGLE_ROTATION_STEPS)
+            {
+                handPos -= SINGLE_ROTATION_STEPS;
+            }
+        }
+    }
+
     Wire.beginTransmission(board);
 
     Wire.write(1); // command

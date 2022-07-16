@@ -68,7 +68,7 @@ void Motor::setTargetPos(int targetPos, int extraTurns, bool clockwise, int spee
 
     stepsToMake += extraSteps;
 
-    if (!clockwise)
+    if (!clockwise && stepsToMake != 0)
     {
         stepsToMake = stepsToMake - SINGLE_ROTATION_STEPS - (extraSteps * 2);
     }
