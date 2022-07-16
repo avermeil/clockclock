@@ -2,16 +2,6 @@
 #include <Wire.h>
 #include "hand.h"
 
-const int SINGLE_ROTATION_STEPS = 4320;
-const int BOTTOM = 0;
-const int BOTTOM_LEFT = SINGLE_ROTATION_STEPS * 1 / 8;
-const int LEFT = SINGLE_ROTATION_STEPS * 2 / 8;
-const int TOP_LEFT = SINGLE_ROTATION_STEPS * 3 / 8;
-const int TOP = SINGLE_ROTATION_STEPS * 4 / 8;
-const int TOP_RIGHT = SINGLE_ROTATION_STEPS * 5 / 8;
-const int RIGHT = SINGLE_ROTATION_STEPS * 6 / 8;
-const int BOTTOM_RIGHT = SINGLE_ROTATION_STEPS * 7 / 8;
-
 short _bytesToInt(byte low, byte high)
 {
     return ((high & 0xFF) << 8) | (low & 0xFF);
@@ -48,22 +38,14 @@ Hand::Hand(byte _board, byte _handIndex)
 
 void Hand::refreshData()
 {
-    // Serial.println("Refreshing data...");
-    long start = micros();
 
     Wire.requestFrom(board, 20);
-    // Serial.println("Sent request for 20 bytes");
 
     for (byte i = 0; i < 4; i++)
     {
         int _calibration = _bytesToInt(Wire.read(), Wire.read());
-        // Serial.println((String) "got calibration for hand " + i + ": " + _calibration);
-
         int _position = _bytesToInt(Wire.read(), Wire.read());
-        // Serial.println((String) "got position for hand " + i + ": " + _position);
-
         bool _isClockwise = Wire.read();
-        // Serial.println((String) "got clockwise for hand " + i + ": " + _isClockwise);
 
         if (i == handIndex)
         {
@@ -72,34 +54,71 @@ void Hand::refreshData()
             isClockwise = _isClockwise;
         }
     }
-
-    long duration = micros() - start;
-    // Serial.println("Took micros:");
-    // Serial.println(duration);
 }
 
-void Hand::moveTo(int handPos, byte extraTurns, bool clockwise, int speed)
+void Hand::moveTo(int handPos, byte extraTurns, byte mode, int speed)
 {
-    Serial.println((String) "sending new handPos... board:" + board + ", handIndex:" + handIndex + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", clockwise:" + clockwise + ", speed:" + speed);
+    Serial.println((String) "sending new handPos... board:" + board + ", handIndex:" + handIndex + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", mode:" + mode + ", speed:" + speed);
+
+    bool clockwise = false;
+
+    if (mode == CLOCKWISE)
+    {
+        clockwise = true;
+    }
+    else if (mode == ANTI_CLOCKWISE)
+    {
+        clockwise = false;
+    }
+    else if (mode == MAINTAIN)
+    {
+        clockwise = isClockwise;
+    }
+
+    // If the speed is less than 20, then interpret as number of seconds of movement wanted.
+    if (speed <= 20)
+    {
+        refreshData();
+
+        int stepsToMake = 0;
+
+        int currentPos = position;
+        int targetPos = handPos;
+
+              if (currentPos < targetPos)
+        {
+            stepsToMake = targetPos - currentPos;
+        }
+        else if (currentPos > targetPos)
+        {
+            stepsToMake = SINGLE_ROTATION_STEPS + targetPos - currentPos;
+        }
+
+        if (!clockwise && stepsToMake != 0)
+        {
+            stepsToMake = stepsToMake - SINGLE_ROTATION_STEPS;
+        }
+
+        if (stepsToMake != 0)
+        {
+            int seconds = speed - 2; // 2 extra consumed by acceleration and deceleration.
+
+            speed = abs(stepsToMake) / seconds;
+        }
+    }
 
     if (!isMinute)
     {
-        Serial.println((String) "is hour...");
         // Some hands a super loose and will "fall" ahead of their position while going down.
         // We need to compensate for this.
         if (hasLooseHourHand)
         {
-            Serial.println((String) "SUPER LOOSE HAND...");
-
             if (clockwise && (handPos == RIGHT || handPos == BOTTOM_RIGHT || handPos == TOP_RIGHT))
             {
-                Serial.println((String) "removing 30.");
-
                 handPos -= 30;
             }
             if (!clockwise && (handPos == RIGHT || handPos == BOTTOM_LEFT || handPos == TOP_LEFT))
             {
-                Serial.println((String) "adding 30.");
                 handPos += 30;
             }
         }
@@ -107,7 +126,7 @@ void Hand::moveTo(int handPos, byte extraTurns, bool clockwise, int speed)
         else if (clockwise)
         {
             handPos += 30;
-            Serial.println((String) "compensating for clockwise play in gears for non-loose minute hand");
+
             if (handPos >= SINGLE_ROTATION_STEPS)
             {
                 handPos -= SINGLE_ROTATION_STEPS;
@@ -130,6 +149,8 @@ void Hand::moveTo(int handPos, byte extraTurns, bool clockwise, int speed)
     Wire.write(highByte(speed));
 
     Wire.endTransmission();
+
+    isClockwise = clockwise;
 }
 
 void Hand::setHallPos(int hallPos)

@@ -22,15 +22,6 @@ const long utcOffsetInSeconds = 3600;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
 const int DEFAULT_SPEED = 2000;
-const int SINGLE_ROTATION_STEPS = 4320;
-const int bottom = 0;
-const int bottom_left = SINGLE_ROTATION_STEPS * 1 / 8;
-const int left = SINGLE_ROTATION_STEPS * 2 / 8;
-const int top_left = SINGLE_ROTATION_STEPS * 3 / 8;
-const int top = SINGLE_ROTATION_STEPS * 4 / 8;
-const int top_right = SINGLE_ROTATION_STEPS * 5 / 8;
-const int right = SINGLE_ROTATION_STEPS * 6 / 8;
-const int bottom_right = SINGLE_ROTATION_STEPS * 7 / 8;
 
 const byte HAND_COUNT = 48;
 Hand hands[HAND_COUNT] = {
@@ -184,7 +175,7 @@ void setDigitTo(byte digit, byte symbol)
     {
         int dest = hands[hand].getDigitPos(symbol);
 
-        hands[hand].moveTo(dest, 0, 1, DEFAULT_SPEED);
+        hands[hand].moveTo(dest, 0, MAINTAIN, 6);
     }
 }
 
@@ -192,9 +183,9 @@ void setUpWave()
 {
     for (byte hand = 0; hand < HAND_COUNT; hand++)
     {
-        int dest = hand % 2 == 0 ? top_right : bottom_left;
+        int dest = hand % 2 == 0 ? TOP_RIGHT : BOTTOM_LEFT;
 
-        hands[hand].moveTo(dest, 0, 1, DEFAULT_SPEED);
+        hands[hand].moveTo(dest, 0, CLOCKWISE, DEFAULT_SPEED);
     }
 
     // set up timer for setUpSpin in 5s
@@ -213,7 +204,7 @@ bool setUpSpin(void *)
         for (byte i = 0; i < 6; i++)
         {
             byte hand = (6 * j) + i;
-            hands[hand].moveTo(bottom, 5, 1, 1000);
+            hands[hand].moveTo(BOTTOM, 5, CLOCKWISE, 1000);
             Serial.println((String) "Moving hand:" + hand);
         }
         delay(300);
