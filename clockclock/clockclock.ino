@@ -1,34 +1,20 @@
 #include <Wire.h>
 #include <EEPROM.h>
 #include <arduino-timer.h>
+#include <Ewma.h>
 #include "./Motor.h"
 
-// tester board:
-// Motor stepper1(6, 7, A0, true, 1270);
-// Motor stepper2(4, 5, A1, false, 1230);
-// Motor stepper3(3, 2, A2, false, 0);
-// Motor stepper4(8, 9, A2, false, 0);
-
-// Board 1
-// Motor steppers[4] = {
-//    Motor(5, 4, A3, false, 500, false),
-//    Motor(7, 6, A2, true, 511, false),
-//    Motor(3, 2, A7, true, 522, false),
-//    Motor(9, 8, A6, false, 524, false)};
-
-// Board 1 pcb
 Motor steppers[4] = {
     Motor(3, 2, A7, true, 510, false),
     Motor(9, 8, A6, false, 515, false),
     Motor(5, 4, A3, false, 504, false),
     Motor(7, 6, A2, true, 495, false)};
 
-// Board 2
-// Motor steppers[4] = {
-//     Motor(5, 4, A3, false, 524, false),
-//     Motor(7, 6, A2, true, 476, false),
-//     Motor(3, 2, A7, true, 500, false),
-//     Motor(9, 8, A6, false, 515, false)};
+Ewma filters[4] = {
+    Ewma(0.01),
+    Ewma(0.01),
+    Ewma(0.01),
+    Ewma(0.01)};
 
 int I2C_ADDRESS = 1;
 
@@ -54,8 +40,7 @@ void setup()
         int flashAddress = i * 2; // two bytes per int
         int savedCalibration = 0;
         EEPROM.get(flashAddress, savedCalibration);
-        Serial.print(F("saved calibration: "));
-        Serial.println(savedCalibration);
+
         if (savedCalibration == -1)
         {
             savedCalibration = 1300; // set a reasonable default
@@ -64,16 +49,64 @@ void setup()
 
         steppers[i].init(savedCalibration);
     }
-
-    Serial.println(F("done setup()"));
 }
 
 void loop()
 {
-    steppers[0].loop();
-    steppers[1].loop();
-    steppers[2].loop();
-    steppers[3].loop();
+    for (byte i = 0; i < 4; i++)
+    {
+        if (i == 0 && !steppers[1].initialised)
+        {
+            continue;
+        }
+        if (i == 2 && !steppers[3].initialised)
+        {
+            continue;
+        }
+
+        steppers[i].stepper.processMovement();
+
+        if (!steppers[i].initialised)
+        {
+            float filtered = filters[i].filter(analogRead(steppers[i].hallPin));
+            steppers[i].calibratePosition(filtered);
+        }
+        else
+        {
+            filters[i].reset();
+        }
+
+        // if (i != 3)
+        // {
+        //     Serial.print(filtered);
+        //     Serial.print(",");
+        // }
+        // else
+        // {
+        //     Serial.println(filtered);
+        // }
+    }
+    // steppers[0].loop();
+    // steppers[1].loop();
+    // steppers[2].loop();
+    // steppers[3].loop();
+
+    // float filtered1 = adcFilter1.filter(analogRead(A3));
+    // float filtered2 = adcFilter2.filter(analogRead(A2));
+    // float filtered3 = adcFilter3.filter(analogRead(A7));
+    // float filtered4 = adcFilter4.filter(analogRead(A6));
+
+    // int sensorValue1 = analogRead(A3);
+    // int sensorValue2 = analogRead(A2);
+    // int sensorValue3 = analogRead(A7);
+    // int sensorValue4 = analogRead(A6);
+    // Serial.print(filtered1);   // print the character
+    // Serial.print(",");         // print the character
+    // Serial.print(filtered2);   // print the character
+    // Serial.print(",");         // print the character
+    // Serial.print(filtered3);   // print the character
+    // Serial.print(",");         // print the character
+    // Serial.println(filtered4); // print the character
 
     // if (Serial.available() > 0)
     // {
@@ -145,111 +178,3 @@ int bytesToInt(byte low, byte high)
 {
     return ((high & 0xFF) << 8) | (low & 0xFF);
 }
-// void showZero()
-// {
-//     clock_1.setHands(bottom, right);
-//     clock_2.setHands(bottom, left);
-//     clock_3.setHands(top, bottom);
-//     clock_4.setHands(top, bottom);
-//     clock_5.setHands(top, right);
-//     clock_6.setHands(top, left);
-// }
-
-// void showOne()
-// {
-//     clock_1.setHands(out, out);
-//     clock_2.setHands(bottom, bottom);
-//     clock_3.setHands(out, out);
-//     clock_4.setHands(top, bottom);
-//     clock_5.setHands(out, out);
-//     clock_6.setHands(top, top);
-// }
-// void showTwo()
-// {
-//     clock_1.setHands(right, right);
-//     clock_2.setHands(left, bottom);
-//     clock_3.setHands(bottom, right);
-//     clock_4.setHands(top, left);
-//     clock_5.setHands(top, right);
-//     clock_6.setHands(left, left);
-// }
-
-// void showThree()
-// {
-//     clock_1.setHands(right, right);
-//     clock_2.setHands(left, bottom);
-//     clock_3.setHands(right, right);
-//     clock_4.setHands(top, left);
-//     clock_5.setHands(right, right);
-//     clock_6.setHands(top, left);
-// }
-
-// void showFour()
-// {
-//     clock_1.setHands(bottom, bottom);
-//     clock_2.setHands(bottom, bottom);
-//     clock_3.setHands(top, right);
-//     clock_4.setHands(top, bottom);
-//     clock_5.setHands(out, out);
-//     clock_6.setHands(top, top);
-// }
-
-// void showFive()
-// {
-//     clock_1.setHands(right, bottom);
-//     clock_2.setHands(left, left);
-//     clock_3.setHands(top, right);
-//     clock_4.setHands(left, bottom);
-//     clock_5.setHands(right, right);
-//     clock_6.setHands(top, left);
-// }
-
-// void showSix()
-// {
-//     clock_1.setHands(right, bottom);
-//     clock_2.setHands(left, left);
-//     clock_3.setHands(top, bottom);
-//     clock_4.setHands(bottom, left);
-//     clock_5.setHands(right, top);
-//     clock_6.setHands(top, left);
-// }
-
-// void showSeven()
-// {
-//     clock_1.setHands(right, right);
-//     clock_2.setHands(left, bottom);
-//     clock_3.setHands(out, out);
-//     clock_4.setHands(top, bottom);
-//     clock_5.setHands(out, out);
-//     clock_6.setHands(top, top);
-// }
-
-// void showEight()
-// {
-//     clock_1.setHands(right, bottom);
-//     clock_2.setHands(left, bottom);
-//     clock_3.setHands(right, bottom);
-//     clock_4.setHands(left, bottom);
-//     clock_5.setHands(right, top);
-//     clock_6.setHands(top, left);
-// }
-
-// void showNine()
-// {
-//     clock_1.setHands(right, bottom);
-//     clock_2.setHands(left, bottom);
-//     clock_3.setHands(top, right);
-//     clock_4.setHands(top, bottom);
-//     clock_5.setHands(right, right);
-//     clock_6.setHands(top, left);
-// }
-
-// void showNull()
-// {
-//     clock_1.setHands(bottom, bottom);
-//     clock_2.setHands(bottom, bottom);
-//     clock_3.setHands(bottom, bottom);
-//     clock_4.setHands(bottom, bottom);
-//     clock_5.setHands(bottom, bottom);
-//     clock_6.setHands(bottom, bottom);
-// }

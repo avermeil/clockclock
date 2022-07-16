@@ -19,7 +19,7 @@ public:
   int getReportedPos();
   int getCalibratedPos();
   int normalisePosition(long reported);
-  void calibratePosition();
+  void calibratePosition(float sensorValue);
   void setSpeed(int stepsPerSecond);
   void loop();
   FlexyStepper stepper;
@@ -33,6 +33,8 @@ public:
   int hallPosition;
   int hallBaseline;
   bool hallFlipped;
+  float minHallReading;
+  int minHallReadingPosition;
 };
 
 #endif

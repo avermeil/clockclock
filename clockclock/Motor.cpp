@@ -24,20 +24,18 @@ Motor::Motor(
     reverseDirection = _reverseDirection;
     hallFlipped = _hallFlipped;
     hallBaseline = _hallBaseline;
+
+    minHallReading = 999.9;
+    minHallReadingPosition = 0;
+
     stepper.connectToPins(stepPin, dirPin, !reverseDirection);
-    setSpeed(1000);
+    setSpeed(2000);
 }
 
 void Motor::init(int hallPos)
 {
-    unsigned long sens = 0;
-    int samples = 5;
-    for (int i = 0; i < samples; i++)
-    {
-        delay(10);
-        sens += analogRead(hallPin);
-    }
-    hallBaseline = round(sens / samples);
+    minHallReading = 999.9;
+    minHallReadingPosition = 0;
 
     if (hallPos == hallPosition)
     {
@@ -117,23 +115,22 @@ int Motor::normalisePosition(long reported)
     return SINGLE_ROTATION_STEPS + (reported % SINGLE_ROTATION_STEPS);
 }
 
-void Motor::calibratePosition()
+void Motor::calibratePosition(float sensorValue)
 {
-    int sensorValue = analogRead(hallPin);
+    if (sensorValue < minHallReading)
+    {
+        minHallReading = sensorValue;
+        minHallReadingPosition = getReportedPos();
+    }
 
-    bool isTriggered = hallFlipped
-                           ? sensorValue > (hallBaseline + HALL_SENSITIVITY)
-                           : sensorValue < (hallBaseline - HALL_SENSITIVITY);
+    bool isTriggered = ((minHallReading + 3.0) < sensorValue);
 
     if (isTriggered && isClockwise)
     {
-        int currentPos = getReportedPos();
-        stepsOffset = currentPos - hallPosition;
+        stepsOffset = minHallReadingPosition - hallPosition;
 
-        // Serial.print(F("entered the zone, stepsOffset is "));
-        // Serial.println(stepsOffset);
         initialised = true;
-        setTargetPos(SINGLE_ROTATION_STEPS * 0.75, 0, false, 2000);
+        setTargetPos(SINGLE_ROTATION_STEPS * 0.75, 0, false, 3000);
     }
 }
 
@@ -145,9 +142,9 @@ void Motor::setSpeed(int stepsPerSecond)
 
 void Motor::loop()
 {
-    stepper.processMovement();
-    if (!initialised)
-    {
-        calibratePosition();
-    }
+    // bool stepped = stepper.processMovement();
+    // if (!initialised && stepped)
+    // {
+    //     calibratePosition();
+    // }
 }
