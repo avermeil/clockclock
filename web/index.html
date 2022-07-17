@@ -20,8 +20,10 @@
                     <label for="ip">IP address</label>
                     <input type="text" name="ip" value="192.168.1.112" />
                     <button type="button" onclick="javascript:probe()">Probe attached boards</button>
+                    <button type="button" onclick="javascript:spin()">Spin</button>
                     <button type="button" onclick="javascript:wiggle()">Wiggle</button>
                     <button type="button" onclick="javascript:zeroout()">Reset</button>
+                    <button type="button" onclick="javascript:showTime()">Show Time</button>
                     <button type="button" onclick="javascript:test()">Test</button>
                     <label for="ip">Hand</label>
                     <select name="hand" id="handinput">
@@ -202,39 +204,66 @@
             await request(`${hand}:${pos}:${extraturns}:${clockwise}:${speed}:sethand`)
         }
 
+        async function _setHand(hand, pos, extraTurns, clockwise, speed) {
+            await request(`${hand.toString().padStart(2, '0')}:${pos.toString().padStart(4, '0')}:${extraTurns}:${clockwise}:${speed.toString().padStart(4, '0')}:sethand`)
+
+        }
+
         async function wiggle() {
-            const setup = document.getElementById("setupForm").elements
-            const inputs = document.getElementById("movementForm").elements;
 
-            const board = setup.board.value
-            const pos = inputs.pos.value
-            const speed = inputs.speed.value
+            // const base = 3000;
+            const speed = 3000
 
+            async function _set(h, p) {
+                await _setHand(h, p * 12, 0, 1, speed)
+                await _setHand(h + 1, p * 12, 0, 1, speed)
+            }
 
+            for (side of [0, 1]) {
 
+                const columns = side ? [7, 6, 5, 4] : [0, 1, 2, 3]
+                const rows = [0, 1, 2]
 
-            for (const i of [1, 2, 3, 4]) {
-                // await request(`sethand?board=${board}&hand=${i - 1}&pos=${pos}&extraturns=${1}&clockwise=${clockwise}&speed=${speed}`)
+                for (const column of columns) {
+                    for (const row_i in rows) {
 
-                for (const j of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
-                    // for (const j of [1, 2, 3,]) {
-                    // for (const j of [4, 5, 6,]) {
-                    // for (const j of [7, 8, 9,]) {
-                    //for (const j of [10, 11, 12]) {
-                    // for (const j of [7, 8, 9, 10, 11, 12]) {
-                    // for (const j of [1, 2, 3, 4, 5, 6]) {
-                    // const localSpeed = speed
-                    const localSpeed = +speed + Math.floor(Math.random() * 200)
-                    const clockwise = Math.random() > 0.5 ? 1 : 0
-                    const extraTurns = clockwise ? 6 : 5
+                        const row = rows[row_i] * 2
 
-                    await request(`sethand?board=${j}&hand=${i - 1}&pos=${pos}&extraturns=${extraTurns}&clockwise=${clockwise}&speed=${localSpeed}`)
+                        const hand = ((column * 6) + row)
+
+                        const base = 270 - (side * 180)
+
+                        const column_straightening_offset = side == 0 ? (column / 2) : (7 - column) / 2
+
+                        // const column_crookening_offset = side == 0 ? (3 - column) * 20 : (column - 4) * 20
+
+                        const offset_multiplier = (row_i - 1) * 45 * column_straightening_offset;
+                        const offset = base - (offset_multiplier) * (side == 0 ? 1 : -1)// + column_crookening_offset;
+
+                        await _set(hand, offset)
+                        console.log(hand, offset)
+                    }
                 }
             }
 
-            //loud boards: 2, 10, 12
+            // for (const column of [0, 1, 2, 3]) {
+            //     for (const row_i in [0, 2, 4]) {
+            //         const row = [0, 2, 4][row_i]
 
-            // byte board, byte hand, int handPos, byte extraTurns, bool clockwise, int speed
+            //         const hand = ((column * 6) + row)
+
+            //         const base = 270
+
+            //         const offset_multiplier = (row_i - 1) * 45 * (column / 3);
+            //         const offset = base - (offset_multiplier)
+
+            //         _set(hand, offset)
+            //         console.log(hand, offset)
+            //     }
+            // }
+
+
+
         }
 
         async function test() {
@@ -242,6 +271,12 @@
         }
         async function zeroout() {
             await request(`reset`)
+        }
+        async function spin() {
+            await request(`spin`)
+        }
+        async function showTime() {
+            await request(`showtime`)
         }
 
         async function preset(i) {

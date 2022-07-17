@@ -175,9 +175,13 @@ void setDigitTo(byte digit, byte symbol)
     {
         int dest = hands[hand].getDigitPos(symbol);
 
-        hands[hand].moveTo(dest, 0, CLOCKWISE, 6);
+        hands[hand].moveTo(dest, 0, CLOCKWISE, 8);
     }
 }
+
+/*
+    Transitions
+*/
 
 void setUpWave()
 {
@@ -186,16 +190,13 @@ void setUpWave()
         int dest = hand % 2 == 0 ? TOP_RIGHT : BOTTOM_LEFT;
         int mode = hand % 2 == 0 ? CLOCKWISE : ANTI_CLOCKWISE;
 
-        hands[hand].moveTo(dest, 0, mode, 2500);
+        hands[hand].moveTo(dest, 0, mode, 4);
     }
 
-    // set up timer for setUpSpin in 5s
-    // delay(8000);
-    // setUpSpin();
-    timer.in(10 * 1000, setUpSpin);
+    timer.in(10 * 1000, setUpWaveSpin);
 }
 
-bool setUpSpin(void *)
+bool setUpWaveSpin(void *)
 {
 
     for (byte j = 0; j < 8; j++)
@@ -208,19 +209,54 @@ bool setUpSpin(void *)
             hands[hand].moveTo(BOTTOM, 5, CLOCKWISE, 1000);
             Serial.println((String) "Moving hand:" + hand);
         }
-        delay(300);
+        delay(240);
     }
 
     timer.in(8 * 1000, showTime);
 }
 
+void setUpHypno()
+{
+    int sides[] = {0, 1};
+    for (int side = 0; side < 2; side++)
+    {
+        int columns[] = {0, 1, 2, 3};
+
+        if (side == 1)
+        {
+            columns[0] = 7;
+            columns[1] = 6;
+            columns[2] = 5;
+            columns[3] = 4;
+        }
+
+        for (int columnIndex = 0; columnIndex < 4; columnIndex++)
+        {
+            for (int rowIndex = 0; rowIndex < 3; rowIndex++)
+            {
+
+                int row = rowIndex * 2;
+
+                int hand = ((columns[columnIndex] * 6) + row);
+
+                int base = 270 - (side * 180);
+
+                int offsetMultiplier = (rowIndex - 1) * 45 * (side == 0 ? (columns[columnIndex]) : (7 - columns[columnIndex])) / 2;
+                int offset = base - (offsetMultiplier) * (side == 0 ? 1 : -1);
+
+                hands[hand].moveTo(offset * 12, 0, CLOCKWISE, 1000);
+                hands[hand + 1].moveTo(offset * 12, 0, CLOCKWISE, 1000);
+            }
+        }
+    }
+}
+
 bool showTime(void *)
 {
-
-    setDigitTo(0, 2);
-    setDigitTo(1, 3);
-    setDigitTo(2, 5);
-    setDigitTo(3, 7);
+    setDigitTo(0, timeClient.getHours() / 10);
+    setDigitTo(1, timeClient.getHours() % 10);
+    setDigitTo(2, timeClient.getMinutes() / 10);
+    setDigitTo(3, timeClient.getMinutes() % 10);
 }
 
 /*
@@ -288,6 +324,12 @@ void handleWebServer()
                 if (currentLine.endsWith("GET /reset"))
                     handleReset();
 
+                if (currentLine.endsWith("GET /spin"))
+                    handleSpin();
+
+                if (currentLine.endsWith("GET /showtime"))
+                    handleShowTime();
+
                 if (currentLine.endsWith(":sethand"))
                 {
                     byte hand = currentLine.substring(5, 7).toInt();
@@ -315,21 +357,6 @@ void handleWebServer()
                     hands[hand].setHallPos(pos);
                     response += "{}";
                 }
-
-                // if (currentLine.indexOf("GET /sethall") != -1)
-                // {
-                //   // await request(`sethall?board=${board.value}&hand=${hand.value}&pos=${hall.value}`)
-                //   String t = currentLine.substring(currentLine.indexOf("hand=") + 4, currentLine.indexOf("&pos="));
-                //   Serial.println("substring:");
-                //   Serial.println(t);
-                // }
-
-                /*
-                  server.on(F("/gethall"), handleGetHall);
-                  server.on(F("/sethall"), handleSetHall);
-                  server.on(F("/sethand"), handleSetHand);
-                  server.on(F("/test"), handleTest);
-                */
             }
         }
         // close the connection:
@@ -381,71 +408,51 @@ void handleGetHall()
 
 void handleProbe()
 {
-    Serial.println("Probing..."); // print the character
+    Serial.println("Probing...");
 
     byte count = 0;
     String json = "[";
-    // for (byte i = 1; i < 13; i++)
-    // {
-    //     Wire.beginTransmission(i);
-    //     if (Wire.endTransmission() == 0)
-    //     {
-    //         if (count != 0)
-    //         {
-    //             json = json + ",";
-    //         }
-    //         json = json + String(i);
+    for (byte i = 1; i < 13; i++)
+    {
+        Wire.beginTransmission(i);
+        if (Wire.endTransmission() == 0)
+        {
+            if (count != 0)
+            {
+                json = json + ",";
+            }
+            json = json + String(i);
 
-    //         count++;
-    //     }          // end of good response
-    //     delay(10); // give devices time to recover
-    // }              // end of for loop
+            count++;
+        }          // end of good response
+        delay(10); // give devices time to recover
+    }              // end of for loop
 
-    // json = json + "]";
+    json = json + "]";
 
-    json = json + "1,2,3,4,5,6,7,8,9,10,11,12]";
+    // json = json + "1,2,3,4,5,6,7,8,9,10,11,12]";
 
     response += json;
 
-    Serial.println("Done probing."); // print the character
+    Serial.println("Done probing.");
 }
-
-// void handleSetHall()
-// {
-//   setHallPos(server.arg(0).toInt(), server.arg(1).toInt(), server.arg(2).toInt());
-
-//   server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
-//   server.send(200, F("application/json"), "{\"ok\":true}");
-// }
-
-// void handleSetHand()
-// {
-//   int count = 0;
-//   for (int i = 0; i < (server.args() / 5); i++)
-//   {
-//     int plus_i = count * 6;
-//     hands[server.arg(0 + plus_i).toInt()].moveTo(server.arg(1 + plus_i).toInt(),
-//                                                  server.arg(2 + plus_i).toInt(),
-//                                                  server.arg(3 + plus_i).toInt(),
-//                                                  server.arg(4 + plus_i).toInt());
-
-//     count++;
-//   }
-
-//   server.sendHeader(F("Access-Control-Allow-Origin"), F("*"));
-//   server.send(200, F("application/json"), "{\"ok\":true}");
-// }
 
 void handleTest()
 {
     Serial.println("doing test...");
 
-    setUpWave();
+    setUpHypno();
+    response += "{}";
+}
 
-    // setDigitTo(0, 2);
-    // setDigitTo(1, 2);
-    // setDigitTo(2, 4);
-    // setDigitTo(3, 5);
+void handleSpin()
+{
+    Serial.println("doing spin...");
+
+    for (byte hand = 0; hand < HAND_COUNT; hand++)
+    {
+        hands[hand].moveTo(BOTTOM, 5, CLOCKWISE, 1000);
+    }
 
     response += "{}";
 }
@@ -454,12 +461,19 @@ void handleReset()
 {
     Serial.println("doing reset...");
 
-    // setUp Wave();
-
     setDigitTo(0, 10);
     setDigitTo(1, 10);
     setDigitTo(2, 10);
     setDigitTo(3, 10);
+
+    response += "{}";
+}
+
+void handleShowTime()
+{
+    Serial.println("doing showTime...");
+
+    showTime(0);
 
     response += "{}";
 }

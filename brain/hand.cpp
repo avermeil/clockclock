@@ -104,6 +104,21 @@ void Hand::moveTo(int handPos, byte extraTurns, byte mode, int speed)
             return;
         }
 
+        int minSteps = 2000;
+
+        // if we only need to move a little bit, add an extra turn
+        if (clockwise && stepsToMake < minSteps)
+        {
+            stepsToMake += SINGLE_ROTATION_STEPS;
+            extraTurns += 1;
+        }
+
+        if (!clockwise && stepsToMake > -minSteps)
+        {
+            stepsToMake -= SINGLE_ROTATION_STEPS;
+            extraTurns += 1;
+        }
+
         int seconds = speed - 2; // 2 extra consumed by acceleration and deceleration.
 
         speed = abs(stepsToMake) / seconds;
@@ -137,6 +152,21 @@ void Hand::moveTo(int handPos, byte extraTurns, byte mode, int speed)
     }
 
     int acceleration = speed / 2;
+
+    if (acceleration < 300)
+    {
+        acceleration = 300;
+    }
+
+    /*
+        Todo:
+        - when going from a high speed to a lower speed, keep acceleration relatively high to allow the hand to slow down in time.
+
+        - when in seconds-mode, add an extra turn if the hand doesn't have time to decelerate to the target position.
+
+        - if the hand is already moving, don't set a very low acceleration.
+
+    */
 
     Serial.println((String) "sending new handPos... board:" + board + ", handIndex:" + handIndex + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", mode:" + mode + ", clockwise:" + clockwise + ", speed:" + speed);
 
