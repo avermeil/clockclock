@@ -157,6 +157,8 @@ void setup()
     printWifiStatus(); // you're connected now, so print out the status
 
     digitalWrite(INTERNAL_LED, 1);
+
+    randomSeed(analogRead(0));
 }
 
 void loop()
@@ -175,22 +177,28 @@ void setDigitTo(byte digit, byte symbol)
     {
         int dest = hands[hand].getDigitPos(symbol);
 
-        hands[hand].moveTo(dest, 0, CLOCKWISE, 8);
+        hands[hand].moveTo(dest, 0, MAINTAIN, 8);
     }
 }
 
 /*
     Transitions
+
+    - wave (straight with time offset)
+    - hypno (pointing to centre of display)
+    - square (keep everything aligned at the same speed)
+    - scissors (reset, then counter-rotating)
+    - random
 */
 
+// WAVE
 void setUpWave()
 {
     for (byte hand = 0; hand < HAND_COUNT; hand++)
     {
         int dest = hand % 2 == 0 ? TOP_RIGHT : BOTTOM_LEFT;
-        int mode = hand % 2 == 0 ? CLOCKWISE : ANTI_CLOCKWISE;
 
-        hands[hand].moveTo(dest, 0, mode, 4);
+        hands[hand].moveTo(dest, 0, FASTEST, 1000);
     }
 
     timer.in(10 * 1000, setUpWaveSpin);
@@ -215,6 +223,7 @@ bool setUpWaveSpin(void *)
     timer.in(8 * 1000, showTime);
 }
 
+// HYPNO
 void setUpHypno()
 {
     int sides[] = {0, 1};
@@ -244,13 +253,75 @@ void setUpHypno()
                 int offsetMultiplier = (rowIndex - 1) * 45 * (side == 0 ? (columns[columnIndex]) : (7 - columns[columnIndex])) / 2;
                 int offset = base - (offsetMultiplier) * (side == 0 ? 1 : -1);
 
-                hands[hand].moveTo(offset * 12, 0, CLOCKWISE, 1000);
-                hands[hand + 1].moveTo(offset * 12, 0, CLOCKWISE, 1000);
+                hands[hand].moveTo(offset * 12, 0, FASTEST, 1000);
+                hands[hand + 1].moveTo(offset * 12, 0, FASTEST, 1000);
             }
         }
     }
+
+    timer.in(8 * 1000, setUpHynoSpin);
 }
 
+bool setUpHynoSpin(void *)
+{
+
+    for (byte hand = 0; hand < HAND_COUNT; hand++)
+    {
+        hands[hand].moveTo(BOTTOM, 5, CLOCKWISE, 1000);
+    }
+
+    timer.in(8 * 1000, showTime);
+}
+
+// SQUARE
+void setUpSquare()
+{
+    for (byte hand = 0; hand < HAND_COUNT; hand++)
+    {
+        hands[hand].moveTo(BOTTOM, 5, CLOCKWISE, 1000);
+    }
+
+    timer.in(8 * 1000, showTime);
+}
+
+// SCISSORS
+
+void setUpScissors()
+{
+    for (byte hand = 0; hand < HAND_COUNT; hand++)
+    {
+        hands[hand].moveTo(BOTTOM_LEFT, 0, FASTEST, 1000);
+    }
+
+    timer.in(8 * 1000, setUpScissorsSpin);
+}
+
+bool setUpScissorsSpin(void *)
+{
+    for (byte hand = 0; hand < HAND_COUNT; hand++)
+    {
+        int mode = hand % 2 == 0 ? CLOCKWISE : ANTI_CLOCKWISE;
+        hands[hand].moveTo(BOTTOM_LEFT, 5, mode, 1000);
+    }
+
+    timer.in(8 * 1000, showTime);
+}
+
+// RANDOM
+
+void setUpRandom()
+{
+    for (byte hand = 0; hand < HAND_COUNT; hand++)
+    {
+        int clockwise = random(0, 2);
+        int speed = random(500, 1500);
+        hands[hand].moveTo(BOTTOM_LEFT, 5, clockwise, speed);
+    }
+
+    timer.in(8 * 1000, showTime);
+}
+
+// TIME
 bool showTime(void *)
 {
     setDigitTo(0, timeClient.getHours() / 10);
@@ -326,6 +397,21 @@ void handleWebServer()
 
                 if (currentLine.endsWith("GET /spin"))
                     handleSpin();
+
+                if (currentLine.endsWith("GET /wave"))
+                    handleWave();
+
+                if (currentLine.endsWith("GET /hypno"))
+                    handleHypno();
+
+                if (currentLine.endsWith("GET /square"))
+                    handleSquare();
+
+                if (currentLine.endsWith("GET /scissors"))
+                    handleScissors();
+
+                if (currentLine.endsWith("GET /random"))
+                    handleRandom();
 
                 if (currentLine.endsWith("GET /showtime"))
                     handleShowTime();
@@ -465,6 +551,43 @@ void handleReset()
     setDigitTo(1, 10);
     setDigitTo(2, 10);
     setDigitTo(3, 10);
+
+    response += "{}";
+}
+
+void handleWave()
+{
+    Serial.println("doing showTime...");
+
+    setUpWave();
+
+    response += "{}";
+}
+
+void handleHypno()
+{
+    setUpHypno();
+
+    response += "{}";
+}
+
+void handleSquare()
+{
+    setUpSquare();
+
+    response += "{}";
+}
+
+void handleScissors()
+{
+    setUpScissors();
+
+    response += "{}";
+}
+
+void handleRandom()
+{
+    setUpRandom();
 
     response += "{}";
 }

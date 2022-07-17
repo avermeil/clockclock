@@ -19,12 +19,19 @@
                 <fieldset>
                     <label for="ip">IP address</label>
                     <input type="text" name="ip" value="192.168.1.112" />
-                    <button type="button" onclick="javascript:probe()">Probe attached boards</button>
+                    <button type="button" onclick="javascript:probe()">Probe </button>
                     <button type="button" onclick="javascript:spin()">Spin</button>
-                    <button type="button" onclick="javascript:wiggle()">Wiggle</button>
+                    <!-- <button type="button" onclick="javascript:wiggle()">Wiggle</button> -->
                     <button type="button" onclick="javascript:zeroout()">Reset</button>
                     <button type="button" onclick="javascript:showTime()">Show Time</button>
                     <button type="button" onclick="javascript:test()">Test</button>
+                    <br>
+                    <button type="button" onclick="javascript:request('wave')">Wave</button>
+                    <button type="button" onclick="javascript:request('hypno')">Hypno</button>
+                    <button type="button" onclick="javascript:request('square')">Square</button>
+                    <button type="button" onclick="javascript:request('scissors')">Scissors</button>
+                    <button type="button" onclick="javascript:request('random')">Random</button>
+
                     <label for="ip">Hand</label>
                     <select name="hand" id="handinput">
                         <option selected>0</option>

@@ -17,6 +17,7 @@ const int BOTTOM_RIGHT = SINGLE_ROTATION_STEPS * 7 / 8;
 const byte ANTI_CLOCKWISE = 0;
 const byte CLOCKWISE = 1;
 const byte MAINTAIN = 2;
+const byte FASTEST = 3;
 
 class Hand
 {

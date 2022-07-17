@@ -60,6 +60,12 @@ void Hand::moveTo(int handPos, byte extraTurns, byte mode, int speed)
 {
     // Serial.println((String) "sending new handPos... board:" + board + ", handIndex:" + handIndex + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", mode:" + mode + ", speed:" + speed);
 
+    if (speed <= 20 || mode == FASTEST)
+    {
+        // In these cases, we need to know where the hand is currently.
+        refreshData();
+    }
+
     bool clockwise = false;
 
     if (mode == CLOCKWISE)
@@ -74,12 +80,39 @@ void Hand::moveTo(int handPos, byte extraTurns, byte mode, int speed)
     {
         clockwise = isClockwise;
     }
+    else if (mode == FASTEST)
+    {
+        int clockwiseStepsToMake = 0;
+        int antiClockwiseStepsToMake = 0;
+
+        int currentPos = position;
+        int targetPos = handPos;
+
+        if (currentPos < targetPos)
+        {
+            clockwiseStepsToMake = targetPos - currentPos;
+        }
+        else if (currentPos > targetPos)
+        {
+            clockwiseStepsToMake = SINGLE_ROTATION_STEPS + targetPos - currentPos;
+        }
+
+        if (clockwiseStepsToMake == 0)
+        {
+            return;
+        }
+
+        antiClockwiseStepsToMake = clockwiseStepsToMake - SINGLE_ROTATION_STEPS;
+
+        if (-antiClockwiseStepsToMake > clockwiseStepsToMake)
+        {
+            clockwise = true;
+        }
+    }
 
     // If the speed is less than 20, then interpret as number of seconds of movement wanted.
     if (speed <= 20)
     {
-        refreshData();
-
         int stepsToMake = 0;
 
         int currentPos = position;
@@ -126,7 +159,7 @@ void Hand::moveTo(int handPos, byte extraTurns, byte mode, int speed)
 
     if (!isMinute)
     {
-        // Some hands a super loose and will "fall" ahead of their position while going down.
+        // Some hands are super loose and will "fall" ahead of their position while going down.
         // We need to compensate for this.
         if (hasLooseHourHand)
         {
