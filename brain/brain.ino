@@ -379,38 +379,42 @@ bool doYes()
 {
     stopClocking = true;
 
-    setDigitTo(0, N, true);
-    setDigitTo(1, O, true);
-    setDigitTo(2, O, true);
     setDigitTo(3, R, true);
+    setDigitTo(0, N, true);
+
+    setDigitTo(2, O, true);
+    setDigitTo(1, O, true);
 
     delay(5000);
-
-    setDigitTo(0, W, true);
     setDigitTo(1, IL, true);
     setDigitTo(2, LL, true);
+
     setDigitTo(3, L2, true);
+    setDigitTo(0, W, true);
 
     delay(5000);
 
-    setDigitTo(0, Y2, true);
     setDigitTo(1, O, true);
     setDigitTo(2, U, true);
+
     setDigitTo(3, 10, true);
+    setDigitTo(0, Y2, true);
 
     delay(5000);
 
+    setDigitTo(3, Y2, true);
     setDigitTo(0, M, true);
+
     setDigitTo(1, A, true);
     setDigitTo(2, R, true);
-    setDigitTo(3, Y2, true);
 
     delay(5000);
 
     setDigitTo(0, M, true);
-    setDigitTo(1, E, true);
     setDigitTo(2, Q, true);
+
     setDigitTo(3, 10, true);
+    setDigitTo(1, E, true);
 }
 
 /*
