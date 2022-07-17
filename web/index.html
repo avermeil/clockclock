@@ -21,6 +21,7 @@
                     <input type="text" name="ip" value="192.168.1.112" />
                     <button type="button" onclick="javascript:probe()">Probe attached boards</button>
                     <button type="button" onclick="javascript:wiggle()">Wiggle</button>
+                    <button type="button" onclick="javascript:zeroout()">Reset</button>
                     <button type="button" onclick="javascript:test()">Test</button>
                     <label for="ip">Hand</label>
                     <select name="hand" id="handinput">
@@ -238,6 +239,9 @@
 
         async function test() {
             await request(`test`)
+        }
+        async function zeroout() {
+            await request(`reset`)
         }
 
         async function preset(i) {

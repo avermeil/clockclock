@@ -175,7 +175,7 @@ void setDigitTo(byte digit, byte symbol)
     {
         int dest = hands[hand].getDigitPos(symbol);
 
-        hands[hand].moveTo(dest, 0, MAINTAIN, 6);
+        hands[hand].moveTo(dest, 0, CLOCKWISE, 6);
     }
 }
 
@@ -184,14 +184,15 @@ void setUpWave()
     for (byte hand = 0; hand < HAND_COUNT; hand++)
     {
         int dest = hand % 2 == 0 ? TOP_RIGHT : BOTTOM_LEFT;
+        int mode = hand % 2 == 0 ? CLOCKWISE : ANTI_CLOCKWISE;
 
-        hands[hand].moveTo(dest, 0, CLOCKWISE, DEFAULT_SPEED);
+        hands[hand].moveTo(dest, 0, mode, 2500);
     }
 
     // set up timer for setUpSpin in 5s
     // delay(8000);
     // setUpSpin();
-    timer.in(8 * 1000, setUpSpin);
+    timer.in(10 * 1000, setUpSpin);
 }
 
 bool setUpSpin(void *)
@@ -209,6 +210,17 @@ bool setUpSpin(void *)
         }
         delay(300);
     }
+
+    timer.in(8 * 1000, showTime);
+}
+
+bool showTime(void *)
+{
+
+    setDigitTo(0, 2);
+    setDigitTo(1, 3);
+    setDigitTo(2, 5);
+    setDigitTo(3, 7);
 }
 
 /*
@@ -272,6 +284,9 @@ void handleWebServer()
 
                 if (currentLine.endsWith("GET /test"))
                     handleTest();
+
+                if (currentLine.endsWith("GET /reset"))
+                    handleReset();
 
                 if (currentLine.endsWith(":sethand"))
                 {
@@ -425,12 +440,26 @@ void handleTest()
 {
     Serial.println("doing test...");
 
+    setUpWave();
+
+    // setDigitTo(0, 2);
+    // setDigitTo(1, 2);
+    // setDigitTo(2, 4);
+    // setDigitTo(3, 5);
+
+    response += "{}";
+}
+
+void handleReset()
+{
+    Serial.println("doing reset...");
+
     // setUp Wave();
 
-    setDigitTo(0, 2);
-    setDigitTo(1, 2);
-    setDigitTo(2, 4);
-    setDigitTo(3, 5);
+    setDigitTo(0, 10);
+    setDigitTo(1, 10);
+    setDigitTo(2, 10);
+    setDigitTo(3, 10);
 
     response += "{}";
 }

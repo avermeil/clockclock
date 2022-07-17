@@ -30,6 +30,7 @@ Motor::Motor(
 
     stepper.connectToPins(stepPin, dirPin, !reverseDirection);
     setSpeed(2000);
+    setAcceleration(1000);
 }
 
 void Motor::init(int hallPos)
@@ -48,9 +49,11 @@ void Motor::init(int hallPos)
     setTargetPos(0, 3, true);
 }
 
-void Motor::setTargetPos(int targetPos, int extraTurns, bool clockwise, int speed = 1000)
+void Motor::setTargetPos(int targetPos, int extraTurns, bool clockwise, int speed = 1000, int acceleration = 500)
 {
     setSpeed(speed);
+    setAcceleration(acceleration);
+
     isClockwise = clockwise;
 
     int currentPos = getCalibratedPos();
@@ -137,7 +140,11 @@ void Motor::calibratePosition(float sensorValue)
 void Motor::setSpeed(int stepsPerSecond)
 {
     stepper.setSpeedInStepsPerSecond(stepsPerSecond);
-    stepper.setAccelerationInStepsPerSecondPerSecond(stepsPerSecond / 2);
+}
+
+void Motor::setAcceleration(int stepsPerSecondPerSecond)
+{
+    stepper.setAccelerationInStepsPerSecondPerSecond(stepsPerSecondPerSecond);
 }
 
 void Motor::loop()

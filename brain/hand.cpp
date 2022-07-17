@@ -58,7 +58,7 @@ void Hand::refreshData()
 
 void Hand::moveTo(int handPos, byte extraTurns, byte mode, int speed)
 {
-    Serial.println((String) "sending new handPos... board:" + board + ", handIndex:" + handIndex + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", mode:" + mode + ", speed:" + speed);
+    // Serial.println((String) "sending new handPos... board:" + board + ", handIndex:" + handIndex + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", mode:" + mode + ", speed:" + speed);
 
     bool clockwise = false;
 
@@ -85,7 +85,7 @@ void Hand::moveTo(int handPos, byte extraTurns, byte mode, int speed)
         int currentPos = position;
         int targetPos = handPos;
 
-              if (currentPos < targetPos)
+        if (currentPos < targetPos)
         {
             stepsToMake = targetPos - currentPos;
         }
@@ -99,12 +99,14 @@ void Hand::moveTo(int handPos, byte extraTurns, byte mode, int speed)
             stepsToMake = stepsToMake - SINGLE_ROTATION_STEPS;
         }
 
-        if (stepsToMake != 0)
+        if (stepsToMake == 0)
         {
-            int seconds = speed - 2; // 2 extra consumed by acceleration and deceleration.
-
-            speed = abs(stepsToMake) / seconds;
+            return;
         }
+
+        int seconds = speed - 2; // 2 extra consumed by acceleration and deceleration.
+
+        speed = abs(stepsToMake) / seconds;
     }
 
     if (!isMinute)
@@ -134,6 +136,10 @@ void Hand::moveTo(int handPos, byte extraTurns, byte mode, int speed)
         }
     }
 
+    int acceleration = speed / 2;
+
+    Serial.println((String) "sending new handPos... board:" + board + ", handIndex:" + handIndex + ", handPos:" + handPos + ", extraTurns:" + extraTurns + ", mode:" + mode + ", clockwise:" + clockwise + ", speed:" + speed);
+
     Wire.beginTransmission(board);
 
     Wire.write(1); // command
@@ -147,6 +153,9 @@ void Hand::moveTo(int handPos, byte extraTurns, byte mode, int speed)
 
     Wire.write(lowByte(speed));
     Wire.write(highByte(speed));
+
+    Wire.write(lowByte(acceleration));
+    Wire.write(highByte(acceleration));
 
     Wire.endTransmission();
 

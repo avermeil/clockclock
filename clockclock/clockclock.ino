@@ -121,9 +121,12 @@ void receiveEvent(int howMany)
         byte clockwise = Wire.read();
         byte speedLowPos = Wire.read();
         byte speedHighPos = Wire.read();
+        byte accelLowPos = Wire.read();
+        byte accelHighPos = Wire.read();
         int pos = bytesToInt(lowPos, highPos);
         int speed = bytesToInt(speedLowPos, speedHighPos);
-        steppers[hand].setTargetPos(pos, extraTurns, clockwise, speed);
+        int accel = bytesToInt(accelLowPos, accelHighPos);
+        steppers[hand].setTargetPos(pos, extraTurns, clockwise, speed, accel);
     }
 }
 
