@@ -126,6 +126,15 @@ void receiveEvent(int howMany)
         int pos = bytesToInt(lowPos, highPos);
         int speed = bytesToInt(speedLowPos, speedHighPos);
         int accel = bytesToInt(accelLowPos, accelHighPos);
+
+        for (byte i = 0; i < 4; i++)
+        {
+            if (!steppers[i].initialised)
+            {
+                return;
+            }
+        }
+
         steppers[hand].setTargetPos(pos, extraTurns, clockwise, speed, accel);
     }
 }
