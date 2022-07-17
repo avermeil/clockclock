@@ -177,7 +177,7 @@ void setDigitTo(byte digit, byte symbol)
     {
         int dest = hands[hand].getDigitPos(symbol);
 
-        hands[hand].moveTo(dest, 0, MAINTAIN, 8);
+        hands[hand].moveTo(dest, 0, MAINTAIN, 7);
     }
 }
 
@@ -198,10 +198,10 @@ void setUpWave()
     {
         int dest = hand % 2 == 0 ? TOP_RIGHT : BOTTOM_LEFT;
 
-        hands[hand].moveTo(dest, 0, FASTEST, 1000);
+        hands[hand].moveTo(dest, 0, FASTEST, 1800);
     }
 
-    timer.in(10 * 1000, setUpWaveSpin);
+    timer.in(6 * 1000, setUpWaveSpin);
 }
 
 bool setUpWaveSpin(void *)
@@ -253,13 +253,13 @@ void setUpHypno()
                 int offsetMultiplier = (rowIndex - 1) * 45 * (side == 0 ? (columns[columnIndex]) : (7 - columns[columnIndex])) / 2;
                 int offset = base - (offsetMultiplier) * (side == 0 ? 1 : -1);
 
-                hands[hand].moveTo(offset * 12, 0, FASTEST, 1000);
-                hands[hand + 1].moveTo(offset * 12, 0, FASTEST, 1000);
+                hands[hand].moveTo(offset * 12, 0, FASTEST, 1800);
+                hands[hand + 1].moveTo(offset * 12, 0, FASTEST, 1800);
             }
         }
     }
 
-    timer.in(8 * 1000, setUpHynoSpin);
+    timer.in(6 * 1000, setUpHynoSpin);
 }
 
 bool setUpHynoSpin(void *)
@@ -290,10 +290,10 @@ void setUpScissors()
 {
     for (byte hand = 0; hand < HAND_COUNT; hand++)
     {
-        hands[hand].moveTo(BOTTOM_LEFT, 0, FASTEST, 1000);
+        hands[hand].moveTo(BOTTOM_LEFT, 0, FASTEST, 1800);
     }
 
-    timer.in(8 * 1000, setUpScissorsSpin);
+    timer.in(6 * 1000, setUpScissorsSpin);
 }
 
 bool setUpScissorsSpin(void *)
@@ -308,7 +308,6 @@ bool setUpScissorsSpin(void *)
 }
 
 // RANDOM
-
 void setUpRandom()
 {
     for (byte hand = 0; hand < HAND_COUNT; hand++)
@@ -545,8 +544,6 @@ void handleSpin()
 
 void handleReset()
 {
-    Serial.println("doing reset...");
-
     setDigitTo(0, 10);
     setDigitTo(1, 10);
     setDigitTo(2, 10);
@@ -557,8 +554,6 @@ void handleReset()
 
 void handleWave()
 {
-    Serial.println("doing showTime...");
-
     setUpWave();
 
     response += "{}";
@@ -594,8 +589,6 @@ void handleRandom()
 
 void handleShowTime()
 {
-    Serial.println("doing showTime...");
-
     showTime(0);
 
     response += "{}";
