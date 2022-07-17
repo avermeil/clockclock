@@ -5,15 +5,15 @@
 #include <arduino-timer.h>
 #include "./hand.h"
 
-char ssid[] = SECRET_SSID; // your network SSID (name)
-char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
+const char ssid[] = SECRET_SSID; // your network SSID (name)
+const char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
 
 auto timer = timer_create_default(); // create a timer with default settings
 
 int status = WL_IDLE_STATUS;
 WiFiServer server(80);
 
-int INTERNAL_LED = 13;
+const int INTERNAL_LED = 13;
 
 String response = "";
 
@@ -88,6 +88,8 @@ Hand hands[HAND_COUNT] = {
     Hand(11, 3),
     Hand(12, 2),
     Hand(12, 3)};
+
+byte previousMinute = 0;
 
 void setup()
 {
@@ -166,6 +168,40 @@ void loop()
     handleWebServer();
     timer.tick(); // tick the timer
     timeClient.update();
+
+    byte minute = timeClient.getMinutes();
+
+    if (minute != previousMinute)
+    {
+        previousMinute = minute;
+
+        int transition = random(8);
+
+        if (transition == 0)
+        {
+            setUpWave();
+        }
+        else if (transition == 1)
+        {
+            setUpHypno();
+        }
+        else if (transition == 2)
+        {
+            setUpScissors();
+        }
+        else if (transition == 3)
+        {
+            setUpSquare();
+        }
+        else if (transition == 4)
+        {
+            setUpRandom();
+        }
+        else
+        {
+            showTime(0);
+        }
+    }
 }
 
 void setDigitTo(byte digit, byte symbol)
