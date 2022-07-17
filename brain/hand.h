@@ -14,6 +14,23 @@ const int TOP_RIGHT = SINGLE_ROTATION_STEPS * 5 / 8;
 const int RIGHT = SINGLE_ROTATION_STEPS * 6 / 8;
 const int BOTTOM_RIGHT = SINGLE_ROTATION_STEPS * 7 / 8;
 
+const int U = 11;
+const int O = 12;
+const int E = 13;
+const int W = 14;
+const int L = 15;
+const int I = 16;
+const int R = 17;
+const int Y = 18;
+const int Y2 = 21;
+const int M = 19;
+const int A = 20;
+const int Q = 22;
+const int N = 23;
+const int IL = 24;
+const int LL = 25;
+const int L2 = 26;
+
 const byte ANTI_CLOCKWISE = 0;
 const byte CLOCKWISE = 1;
 const byte MAINTAIN = 2;

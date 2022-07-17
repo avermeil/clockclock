@@ -399,5 +399,227 @@ int Hand::getDigitPos(byte symbol)
             return combo(TOP, LEFT);
     }
 
+    if (symbol == W)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, BOTTOM);
+        if (segment == 2)
+            return combo(BOTTOM, BOTTOM);
+        if (segment == 3)
+            return combo(BOTTOM, TOP);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 5)
+            return combo(TOP, TOP_RIGHT);
+        if (segment == 6)
+            return combo(TOP, TOP_LEFT);
+    }
+
+    if (symbol == I)
+    {
+        if (segment == 2)
+            return BOTTOM;
+        if (segment == 4)
+            return combo(TOP, BOTTOM);
+        if (segment == 6)
+            return TOP;
+    }
+
+    if (symbol == L)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, BOTTOM);
+        if (segment == 3)
+            return combo(BOTTOM, TOP);
+        if (segment == 5)
+            return combo(TOP, RIGHT);
+        if (segment == 6)
+            return combo(LEFT, LEFT);
+    }
+
+    if (symbol == IL)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, BOTTOM);
+        if (segment == 2)
+            return combo(BOTTOM, BOTTOM);
+        if (segment == 3)
+            return combo(BOTTOM, TOP);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 5)
+            return combo(TOP, TOP);
+        if (segment == 6)
+            return combo(TOP, RIGHT);
+    }
+
+    if (symbol == LL)
+    {
+        if (segment == 2)
+            return combo(BOTTOM, BOTTOM);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 5)
+            return combo(LEFT, LEFT);
+        if (segment == 6)
+            return combo(TOP, RIGHT);
+    }
+
+    if (symbol == L2)
+    {
+        if (segment == 5)
+            return combo(LEFT, LEFT);
+    }
+
+    if (symbol == Y)
+    {
+        if (segment == 1)
+            return BOTTOM;
+        if (segment == 2)
+            return BOTTOM;
+        if (segment == 3)
+            return combo(TOP, RIGHT);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 6)
+            return TOP;
+    }
+
+    if (symbol == Y2)
+    {
+        if (segment == 1)
+            return BOTTOM_RIGHT;
+        if (segment == 2)
+            return BOTTOM;
+        if (segment == 4)
+            return combo(TOP_LEFT, BOTTOM);
+        if (segment == 6)
+            return TOP;
+    }
+
+    if (symbol == O)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 2)
+            return combo(BOTTOM, LEFT);
+        if (segment == 3)
+            return combo(BOTTOM, TOP);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 5)
+            return combo(TOP, RIGHT);
+        if (segment == 6)
+            return combo(TOP, LEFT);
+    }
+
+    if (symbol == U)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, BOTTOM);
+        if (segment == 2)
+            return combo(BOTTOM, BOTTOM);
+        if (segment == 3)
+            return combo(BOTTOM, TOP);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 5)
+            return combo(TOP, RIGHT);
+        if (segment == 6)
+            return combo(TOP, LEFT);
+    }
+
+    if (symbol == M)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, BOTTOM_RIGHT);
+        if (segment == 2)
+            return combo(BOTTOM, BOTTOM_LEFT);
+        if (segment == 3)
+            return combo(BOTTOM, TOP);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 5)
+            return combo(TOP, TOP);
+        if (segment == 6)
+            return combo(TOP, TOP);
+    }
+
+    if (symbol == A)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 2)
+            return combo(BOTTOM, LEFT);
+        if (segment == 3)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 4)
+            return combo(BOTTOM, LEFT);
+        if (segment == 5)
+            return combo(TOP, TOP);
+        if (segment == 6)
+            return combo(TOP, TOP);
+    }
+
+    if (symbol == R)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 2)
+            return combo(BOTTOM, LEFT);
+        if (segment == 3)
+            return combo(BOTTOM, TOP);
+        if (segment == 4)
+            return combo(BOTTOM, TOP_LEFT);
+        if (segment == 5)
+            return combo(TOP, TOP);
+        if (segment == 6)
+            return combo(TOP, TOP);
+    }
+
+    if (symbol == E)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 2)
+            return combo(LEFT, LEFT);
+        if (segment == 3)
+            return combo(TOP, RIGHT);
+        if (segment == 4)
+            return combo(LEFT, LEFT);
+        if (segment == 5)
+            return combo(TOP, RIGHT);
+        if (segment == 6)
+            return combo(LEFT, LEFT);
+    }
+
+    if (symbol == Q)
+    {
+        if (segment == 1)
+            return combo(RIGHT, RIGHT);
+        if (segment == 2)
+            return combo(BOTTOM, LEFT);
+        if (segment == 4)
+            return combo(TOP, BOTTOM_LEFT);
+        if (segment == 6)
+            return combo(LEFT, LEFT);
+    }
+
+    if (symbol == N)
+    {
+        if (segment == 1)
+            return combo(BOTTOM, RIGHT);
+        if (segment == 2)
+            return combo(BOTTOM, LEFT);
+        if (segment == 3)
+            return combo(BOTTOM, TOP);
+        if (segment == 4)
+            return combo(BOTTOM, TOP);
+        if (segment == 5)
+            return combo(TOP, TOP);
+        if (segment == 6)
+            return combo(TOP, TOP);
+    }
+
     return BOTTOM_LEFT;
 }

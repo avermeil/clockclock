@@ -90,6 +90,7 @@ Hand hands[HAND_COUNT] = {
     Hand(12, 3)};
 
 byte previousMinute = 0;
+bool stopClocking = false;
 
 void setup()
 {
@@ -171,7 +172,7 @@ void loop()
 
     byte minute = timeClient.getMinutes();
 
-    if (minute != previousMinute)
+    if (!stopClocking && minute != previousMinute)
     {
         previousMinute = minute;
 
@@ -204,7 +205,7 @@ void loop()
     }
 }
 
-void setDigitTo(byte digit, byte symbol)
+void setDigitTo(byte digit, byte symbol, bool fast = false)
 {
     byte start_index = digit * 12;
     byte end_index = start_index + 12;
@@ -212,8 +213,14 @@ void setDigitTo(byte digit, byte symbol)
     for (byte hand = start_index; hand < end_index; hand++)
     {
         int dest = hands[hand].getDigitPos(symbol);
-
-        hands[hand].moveTo(dest, 0, MAINTAIN, 7);
+        if (fast)
+        {
+            hands[hand].moveTo(dest, 0, FASTEST, 3000);
+        }
+        else
+        {
+            hands[hand].moveTo(dest, 0, MAINTAIN, 7);
+        }
     }
 }
 
@@ -359,10 +366,51 @@ void setUpRandom()
 // TIME
 bool showTime(void *)
 {
+    stopClocking = false;
     setDigitTo(0, timeClient.getHours() / 10);
     setDigitTo(1, timeClient.getHours() % 10);
     setDigitTo(2, timeClient.getMinutes() / 10);
     setDigitTo(3, timeClient.getMinutes() % 10);
+}
+
+// YES
+
+bool doYes()
+{
+    stopClocking = true;
+
+    setDigitTo(0, N, true);
+    setDigitTo(1, O, true);
+    setDigitTo(2, O, true);
+    setDigitTo(3, R, true);
+
+    delay(5000);
+
+    setDigitTo(0, W, true);
+    setDigitTo(1, IL, true);
+    setDigitTo(2, LL, true);
+    setDigitTo(3, L2, true);
+
+    delay(5000);
+
+    setDigitTo(0, Y2, true);
+    setDigitTo(1, O, true);
+    setDigitTo(2, U, true);
+    setDigitTo(3, 10, true);
+
+    delay(5000);
+
+    setDigitTo(0, M, true);
+    setDigitTo(1, A, true);
+    setDigitTo(2, R, true);
+    setDigitTo(3, Y2, true);
+
+    delay(5000);
+
+    setDigitTo(0, M, true);
+    setDigitTo(1, E, true);
+    setDigitTo(2, Q, true);
+    setDigitTo(3, 10, true);
 }
 
 /*
@@ -450,6 +498,9 @@ void handleWebServer()
 
                 if (currentLine.endsWith("GET /showtime"))
                     handleShowTime();
+
+                if (currentLine.endsWith("GET /yes"))
+                    handleYes();
 
                 if (currentLine.endsWith(":sethand"))
                 {
@@ -626,6 +677,13 @@ void handleRandom()
 void handleShowTime()
 {
     showTime(0);
+
+    response += "{}";
+}
+
+void handleYes()
+{
+    doYes();
 
     response += "{}";
 }
