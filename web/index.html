@@ -23,6 +23,7 @@
                     <button type="button" onclick="javascript:spin()">Spin</button>
                     <!-- <button type="button" onclick="javascript:wiggle()">Wiggle</button> -->
                     <button type="button" onclick="javascript:zeroout()">Reset</button>
+                    <button type="button" onclick="javascript:pause()">Pause</button>
                     <button type="button" onclick="javascript:showTime()">Show Time</button>
                     <button type="button" onclick="javascript:test()">Test</button>
                     <br>
@@ -253,25 +254,6 @@
                     }
                 }
             }
-
-            // for (const column of [0, 1, 2, 3]) {
-            //     for (const row_i in [0, 2, 4]) {
-            //         const row = [0, 2, 4][row_i]
-
-            //         const hand = ((column * 6) + row)
-
-            //         const base = 270
-
-            //         const offset_multiplier = (row_i - 1) * 45 * (column / 3);
-            //         const offset = base - (offset_multiplier)
-
-            //         _set(hand, offset)
-            //         console.log(hand, offset)
-            //     }
-            // }
-
-
-
         }
 
         async function test() {
@@ -279,6 +261,9 @@
         }
         async function zeroout() {
             await request(`reset`)
+        }
+        async function pause() {
+            await request(`pause`)
         }
         async function spin() {
             await request(`spin`)

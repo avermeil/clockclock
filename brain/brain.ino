@@ -482,6 +482,9 @@ void handleWebServer()
                 if (currentLine.endsWith("GET /reset"))
                     handleReset();
 
+                if (currentLine.endsWith("GET /pause"))
+                    handlePause();
+
                 if (currentLine.endsWith("GET /spin"))
                     handleSpin();
 
@@ -639,6 +642,13 @@ void handleReset()
     setDigitTo(1, 10);
     setDigitTo(2, 10);
     setDigitTo(3, 10);
+
+    response += "{}";
+}
+
+void handlePause()
+{
+    stopClocking = true;
 
     response += "{}";
 }
