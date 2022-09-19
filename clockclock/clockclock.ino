@@ -4,6 +4,14 @@
 #include <Ewma.h>
 #include "./Motor.h"
 
+// defines for setting and clearing register bits, see https://forum.arduino.cc/t/faster-analog-read/6604/6
+#ifndef cbi
+#define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
+#endif
+#ifndef sbi
+#define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
+#endif
+
 Motor steppers[4] = {
     Motor(3, 2, A7, true, 510, false),
     Motor(9, 8, A6, false, 515, false),
@@ -16,12 +24,21 @@ Ewma filters[4] = {
     Ewma(0.01),
     Ewma(0.01)};
 
+Timer<4, millis, byte> timer;
+
 int I2C_ADDRESS = 1;
+
+void (*resetFunc)(void) = 0;
 
 void setup()
 {
     CLKPR = 0x80; // (1000 0000) enable change in clock frequency
     CLKPR = 0x01; // (0000 0001) use clock division factor 2 to reduce the frequency from 16 MHz to 8 MHz
+
+    // set prescale to 16 (for fast ADC)
+    sbi(ADCSRA, ADPS2);
+    cbi(ADCSRA, ADPS1);
+    cbi(ADCSRA, ADPS0);
 
     randomSeed(analogRead(0));
     Wire.begin(I2C_ADDRESS);
@@ -29,30 +46,51 @@ void setup()
     Wire.onReceive(receiveEvent);
     Wire.onRequest(requestEvent);
 
-    Serial.begin(115200);
+    // Serial.begin(115200);
 
     // delay for random amount of time
     int randomNum = random(500);
     delay(randomNum);
 
+    doubleCalibrate();
+}
+
+void doubleCalibrate()
+{
     for (byte i = 0; i < 4; i++)
     {
-        int flashAddress = i * 2; // two bytes per int
-        int savedCalibration = 0;
-        EEPROM.get(flashAddress, savedCalibration);
+        calibrate(i);
 
-        if (savedCalibration == -1)
-        {
-            savedCalibration = 1300; // set a reasonable default
-            EEPROM.put(flashAddress, savedCalibration);
-        }
-
-        steppers[i].init(savedCalibration);
+        // calibrate again after 20s(to deal with when hands happen to start over the hall sensor)
+        timer.in(
+            10000, [](void *argument) -> bool
+            {
+                calibrate(argument);
+                return true; },
+            i);
     }
+}
+
+void calibrate(byte i)
+{
+    int flashAddress = i * 2; // two bytes per int
+    int savedCalibration = 0;
+    EEPROM.get(flashAddress, savedCalibration);
+
+    if (savedCalibration == -1)
+    {
+        savedCalibration = 1300; // set a reasonable default
+        EEPROM.put(flashAddress, savedCalibration);
+    }
+
+    filters[i].reset();
+    steppers[i].initCalibration(savedCalibration, true);
 }
 
 void loop()
 {
+    timer.tick<void>();
+
     for (byte i = 0; i < 4; i++)
     {
         if (i == 0 && !steppers[1].initialised)
@@ -66,15 +104,21 @@ void loop()
 
         bool stepped = steppers[i].stepper.processMovementAlt();
 
-        if (steppers[i].initialised)
+        if (stepped)
         {
-            filters[i].reset();
-        }
-        else if (stepped)
-        {
-
             float filtered = filters[i].filter(analogRead(steppers[i].hallPin));
-            steppers[i].calibratePosition(filtered);
+            if (!steppers[i].initialised)
+            {
+                steppers[i].calibratePosition(filtered);
+            }
+            else
+            {
+                bool calibrationValid = steppers[i].calibrationStillValid(filtered);
+                if (!calibrationValid)
+                {
+                    resetFunc();
+                }
+            }
         }
     }
 }
@@ -110,7 +154,8 @@ void receiveEvent(int howMany)
 
         EEPROM.put(hand * 2, hallPos);
 
-        steppers[hand].init(hallPos);
+        filters[hand].reset();
+        steppers[hand].initCalibration(hallPos, false);
     }
 
     if (command == 1)

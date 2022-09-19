@@ -14,15 +14,15 @@ public:
         bool _reverseDirection,
         int hallBaseline,
         bool _hallFlipped);
-  void init(int hallPos);
+  void initCalibration(int hallPos, bool force);
   void setTargetPos(int targetPos, int extraTurns, bool clockwise, int speed = 1000, int acceleration = 500);
   int getReportedPos();
   int getCalibratedPos();
   int normalisePosition(long reported);
   void calibratePosition(float sensorValue);
+  bool calibrationStillValid(float sensorValue);
   void setSpeed(int stepsPerSecond);
   void setAcceleration(int stepsPerSecondPerSecond);
-  void loop();
   FlexyStepper stepper;
   bool initialised;
   bool reverseDirection;

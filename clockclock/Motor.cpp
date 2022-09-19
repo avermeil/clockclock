@@ -29,16 +29,14 @@ Motor::Motor(
     minHallReadingPosition = 0;
 
     stepper.connectToPins(stepPin, dirPin, !reverseDirection);
-    setSpeed(2000);
-    setAcceleration(1000);
 }
 
-void Motor::init(int hallPos)
+void Motor::initCalibration(int hallPos, bool force)
 {
     minHallReading = 999.9;
     minHallReadingPosition = 0;
 
-    if (hallPos == hallPosition)
+    if (!force && hallPos == hallPosition)
     {
         return;
     }
@@ -46,7 +44,7 @@ void Motor::init(int hallPos)
     initialised = false;
     hallPosition = hallPos;
 
-    setTargetPos(0, 3, true);
+    setTargetPos(0, 3, true, 2000, 4000);
 }
 
 void Motor::setTargetPos(int targetPos, int extraTurns, bool clockwise, int speed = 1000, int acceleration = 500)
@@ -76,23 +74,6 @@ void Motor::setTargetPos(int targetPos, int extraTurns, bool clockwise, int spee
         stepsToMake = stepsToMake - SINGLE_ROTATION_STEPS - (extraSteps * 2);
     }
 
-    // Serial.println(F("===== called setTargetPos ====="));
-
-    // Serial.print(F("clockwise: "));
-    // Serial.println(clockwise);
-    // Serial.print(F("targetPos: "));
-    // Serial.println(targetPos);
-    // Serial.print(F("stepsOffset: "));
-    // Serial.println(stepsOffset);
-    // Serial.print(F("reportedPos: "));
-    // Serial.println(reportedPos);
-    // Serial.print(F("currentPos: "));
-    // Serial.println(currentPos);
-    // Serial.print(F("stepsToMake: "));
-    // Serial.println(stepsToMake);
-    // Serial.print(F("hallPosition: "));
-    // Serial.println(hallPosition);
-
     stepper.setTargetPositionRelativeInSteps(stepsToMake);
 }
 
@@ -120,6 +101,11 @@ int Motor::normalisePosition(long reported)
 
 void Motor::calibratePosition(float sensorValue)
 {
+    if (!isClockwise)
+    {
+        return;
+    }
+
     if (sensorValue < minHallReading)
     {
         minHallReading = sensorValue;
@@ -128,13 +114,34 @@ void Motor::calibratePosition(float sensorValue)
 
     bool isTriggered = ((minHallReading + 3.0) < sensorValue);
 
-    if (isTriggered && isClockwise)
+    if (isTriggered)
     {
         stepsOffset = minHallReadingPosition - hallPosition;
-
         initialised = true;
-        setTargetPos(SINGLE_ROTATION_STEPS * 0.75, 0, false, 3000);
+        setTargetPos(SINGLE_ROTATION_STEPS * 0.75, 0, false, 3000, 4000);
     }
+}
+
+bool Motor::calibrationStillValid(float sensorValue)
+{
+    if (!isClockwise)
+    {
+        return true;
+    }
+
+    int pos = getReportedPos();
+
+    // If the hand should be over the hall sensor...
+    if (pos == minHallReadingPosition)
+    {
+        // ... but it's not, return false
+        if ((minHallReading + 1.0) < sensorValue)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void Motor::setSpeed(int stepsPerSecond)
@@ -145,13 +152,4 @@ void Motor::setSpeed(int stepsPerSecond)
 void Motor::setAcceleration(int stepsPerSecondPerSecond)
 {
     stepper.setAccelerationInStepsPerSecondPerSecond(stepsPerSecondPerSecond);
-}
-
-void Motor::loop()
-{
-    // bool stepped = stepper.processMovement();
-    // if (!initialised && stepped)
-    // {
-    //     calibratePosition();
-    // }
 }
