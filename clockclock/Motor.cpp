@@ -136,8 +136,8 @@ bool Motor::calibrationStillValid(float sensorValue)
     // If the hand should be over the hall sensor...
     if (pos == minHallReadingPosition)
     {
-        // ... but it's not, return false
-        if ((minHallReading + 1.0) < sensorValue)
+        // ... but it's several units above where it should be, then the calibration is no longer valid
+        if (sensorValue > (minHallReading + 8.0))
         {
             return false;
         }
