@@ -12,6 +12,8 @@
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #endif
 
+int I2C_ADDRESS = 1;
+
 Motor steppers[4] = {
     Motor(3, 2, A7, true, 510, false),
     Motor(9, 8, A6, false, 515, false),
@@ -25,8 +27,6 @@ Ewma filters[4] = {
     Ewma(0.01)};
 
 Timer<4, millis, byte> timer;
-
-int I2C_ADDRESS = 1;
 
 void (*resetFunc)(void) = 0;
 
@@ -174,7 +174,7 @@ void receiveEvent(int howMany)
 
         for (byte i = 0; i < 4; i++)
         {
-            if (!steppers[i].initialised)
+            if (steppers[i].calibrationCount < 2)
             {
                 return;
             }

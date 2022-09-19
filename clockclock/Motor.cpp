@@ -18,6 +18,7 @@ Motor::Motor(
     stepsOffset = 0;
     isClockwise = true;
     hallPosition = 0;
+    calibrationCount = 0;
     stepPin = _stepPin;
     dirPin = _dirPin;
     hallPin = _hallPin;
@@ -117,6 +118,7 @@ void Motor::calibratePosition(float sensorValue)
     if (isTriggered)
     {
         stepsOffset = minHallReadingPosition - hallPosition;
+        calibrationCount++;
         initialised = true;
         setTargetPos(SINGLE_ROTATION_STEPS * 0.75, 0, false, 3000, 4000);
     }

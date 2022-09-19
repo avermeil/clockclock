@@ -36,6 +36,7 @@ public:
   bool hallFlipped;
   float minHallReading;
   int minHallReadingPosition;
+  byte calibrationCount;
 };
 
 #endif
