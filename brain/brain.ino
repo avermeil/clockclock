@@ -4,6 +4,14 @@
 #include <NTPClient.h>
 #include <arduino-timer.h>
 #include "./hand.h"
+#include <TimeLib.h>
+
+#include <Timezone.h>   // https://github.com/JChristensen/Timezone
+
+// US Eastern Time Zone (New York, Detroit)
+TimeChangeRule myDST = {"BST", Last, Sun, Mar, 1, 60};    // Daylight time = UTC + 1 hours
+TimeChangeRule mySTD = {"GMT", Last, Sun, Oct, 1, 0};     // Standard time = UTC + 0 hours
+Timezone myTZ(myDST, mySTD);
 
 const char ssid[] = SECRET_SSID; // your network SSID (name)
 const char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
@@ -18,8 +26,7 @@ const int INTERNAL_LED = 13;
 String response = "";
 
 WiFiUDP ntpUDP;
-const long utcOffsetInSeconds = 3600;
-NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
+NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 const int DEFAULT_SPEED = 2000;
 
@@ -169,6 +176,12 @@ void loop()
     handleWebServer();
     timer.tick(); // tick the timer
     timeClient.update();
+    setTime(timeClient.getEpochTime());
+
+    bool isBst = myTZ.utcIsDST(now());
+    if(isBst){
+      timeClient.setTimeOffset(3600);
+    }
 
     byte minute = timeClient.getMinutes();
 
