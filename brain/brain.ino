@@ -1,5 +1,6 @@
 #include "arduino_secrets.h"
 #include <WiFiNINA.h>
+#include <Arduino_ConnectionHandler.h>
 #include <Wire.h>
 #include <NTPClient.h>
 #include <arduino-timer.h>
@@ -15,6 +16,8 @@ Timezone myTZ(myDST, mySTD);
 
 const char ssid[] = SECRET_SSID; // your network SSID (name)
 const char pass[] = SECRET_PASS; // your network password (use for WPA, or use as key for WEP)
+
+WiFiConnectionHandler conMan(ssid, pass); // handles connection automagically
 
 auto timer = timer_create_default(); // create a timer with default settings
 
@@ -99,8 +102,12 @@ Hand hands[HAND_COUNT] = {
 byte previousMinute = 0;
 bool stopClocking = false;
 
+const uint32_t REBOOT_AFTER_MS = 24UL * 60 * 60 * 1000;   // 86 400 000 ms
+uint32_t bootMillis;                                      // recorded in setup()
+
 void setup()
 {
+    bootMillis = millis();               // remember the moment we started
 
     // start of crazy clock reduction
     GCLK->GENDIV.reg = GCLK_GENDIV_DIV(12) | // Divide the 48MHz clock source by divisor 12: 48MHz/12=4MHz
@@ -115,11 +122,9 @@ void setup()
     while (GCLK->STATUS.bit.SYNCBUSY)
         ; // Wait for synchronization
 
-    SerialUSB.begin(115200); // Set-up the native USB port
+    SerialUSB.begin(115200); // Set-up the native USB port. Works fine @9600 baud.
 
     delay(1000);
-    // while (!SerialUSB)
-    //     ; // Wait until the native USB port is ready
 
     Wire.begin();                                     // Set-up the I2C port
     sercom4.disableWIRE();                            // Disable the I2C SERCOM
@@ -131,8 +136,6 @@ void setup()
     SERCOM4->I2CM.BAUD.bit.BAUD = 4000000 / (2 * 10000) - 1; // Set the I2C clock rate to 10kHz
     sercom4.enableWIRE();                                    // Enable the I2C SERCOM
 
-    // Wire.begin();
-    // Serial.begin(9600);            // initialize serial communication
     pinMode(INTERNAL_LED, OUTPUT); // set the LED pin mode
 
     // check for the WiFi module:
@@ -150,29 +153,32 @@ void setup()
         Serial.println("Please upgrade the firmware");
     }
 
-    // attempt to connect to WiFi network:
-    while (status != WL_CONNECTED)
-    {
-        Serial.print("Attempting to connect to Network named: ");
-        Serial.println(ssid); // print the network name (SSID);
-
-        // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-        status = WiFi.begin(ssid, pass);
-        // wait 10 seconds for connection:
-        delay(3000);
-    }
-    server.begin(); // start the web server on port 80
-    timeClient.begin();
-
-    printWifiStatus(); // you're connected now, so print out the status
-
-    digitalWrite(INTERNAL_LED, 1);
+    conMan.addCallback(NetworkConnectionEvent::CONNECTED, onNetworkConnect);
 
     randomSeed(analogRead(0));
 }
 
+void onNetworkConnect() {
+    Serial.println(">>>> CONNECTED to network");
+
+    server.begin(); // start the web server on port 80
+
+    timeClient.begin(); // start the ntp server
+
+    printWifiStatus(); // you're connected now, so print out the status
+
+    digitalWrite(INTERNAL_LED, 1);
+}
+
 void loop()
 {
+    conMan.check();
+
+    // Reset every 24h to keep things fresh
+    if ( (uint32_t)(millis() - bootMillis) >= REBOOT_AFTER_MS ) {
+        NVIC_SystemReset();                // full chip reset
+    }
+
     handleWebServer();
     timer.tick(); // tick the timer
     timeClient.update();
